@@ -77,7 +77,7 @@ impl HMRCMonthlyRatesConverter {
             .ok_or_else(|| ConversionError::DateParseError("Missing Period attribute".to_string()))?;
 
         let start_date_str = period_str.split(" to ").next().ok_or_else(|| {
-            ConversionError::DateParseError(format!("Invalid Period format: {}", period_str))
+            ConversionError::DateParseError(format!("Invalid Period format: {period_str}"))
         })?;
 
         let month_date = NaiveDate::parse_from_str(start_date_str, "%d/%b/%Y")
