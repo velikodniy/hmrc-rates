@@ -213,4 +213,20 @@ mod tests {
         let result = converter.convert("100.00 USD", date);
         assert!(matches!(result, Err(ConversionError::DateOutOfRange(_))));
     }
+
+    #[test]
+    fn test_convert_on_first_day_of_month() {
+        let converter = HMRCMonthlyRatesConverter::new().unwrap();
+        let date = NaiveDate::from_ymd_opt(2025, 8, 1).unwrap();
+        let gbp = converter.convert("100.00 USD", date).unwrap();
+        assert_eq!(gbp.to_string(), "£73.85");
+    }
+
+    #[test]
+    fn test_convert_on_last_day_of_month() {
+        let converter = HMRCMonthlyRatesConverter::new().unwrap();
+        let date = NaiveDate::from_ymd_opt(2025, 8, 31).unwrap();
+        let gbp = converter.convert("100.00 USD", date).unwrap();
+        assert_eq!(gbp.to_string(), "£73.85");
+    }
 }
