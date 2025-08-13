@@ -4,3 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+chrono = { version = "0.4", features = ["serde"] }
+rust_decimal = "1.23"
+roxmltree = "0.14"
+thiserror = "1.0"
