@@ -6,7 +6,9 @@ use chrono::NaiveDate;
 use rust_decimal::Decimal;
 use thiserror::Error;
 
-const XML_DATA: &[&str] = &[include_str!("../data/exrates-monthly-0825.xml")];
+use include_dir::{include_dir, Dir};
+
+const XML_FILES: Dir = include_dir!("data");
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct GBP(Decimal);
@@ -48,7 +50,10 @@ pub struct HMRCMonthlyRatesConverter {
 impl HMRCMonthlyRatesConverter {
     pub fn new() -> Result<Self, ConversionError> {
         let mut rates = BTreeMap::new();
-        for xml_data in XML_DATA {
+        for file in XML_FILES.files() {
+            let xml_data = file.contents_utf8().ok_or_else(|| {
+                ConversionError::DateParseError("Invalid UTF-8 in XML file".to_string())
+            })?;
             Self::parse_xml_data(xml_data, &mut rates)?;
         }
         Ok(Self { rates })
