@@ -45,14 +45,9 @@ pub enum ConversionError {
     ValueParseError(String),
 }
 
+#[derive(Default)]
 pub struct HMRCMonthlyRatesConverter {
     rates: BTreeMap<NaiveDate, BTreeMap<String, Decimal>>,
-}
-
-impl Default for HMRCMonthlyRatesConverter {
-    fn default() -> Self {
-        Self { rates: BTreeMap::new() }
-    }
 }
 
 impl HMRCMonthlyRatesConverter {
