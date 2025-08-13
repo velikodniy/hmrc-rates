@@ -20,7 +20,7 @@ pub struct HMRCMonthlyRatesConverter {
 It will expose methods like:
 
 - `new() -> Result<Self, ConversionError>`: Creates an instance by parsing the embedded XML exchange rate data.
-- `convert(&self, value: &str, date: chrono::NaiveDate) -> Result<GBP, ConversionError>`: Parses an input string (e.g., "123.45 USD"), finds the appropriate rate for the given date, and converts the value to GBP.
+- `convert(&self, amount: Decimal, currency: &str, date: NaiveDate) -> Result<GBP, ConversionError>`: Finds the appropriate rate for the given date and currency, and converts the value to GBP.
 
 ### `GBP`
 
@@ -80,18 +80,19 @@ The core logic for finding a rate for a specific `date` and `currency`:
 ```rust
 use hmrc_rates::{HMRCMonthlyRatesConverter, ConversionError};
 use chrono::NaiveDate;
+use rust_decimal_macros::dec;
 
 fn main() -> Result<(), ConversionError> {
     // Create a converter by parsing the embedded data.
     let converter = HMRCMonthlyRatesConverter::new()?;
 
     let trade_date = NaiveDate::from_ymd_opt(2025, 8, 15).unwrap();
-    let input_value = "100.00 USD";
+    let amount = dec!(100.00);
 
     // Perform the conversion.
-    let gbp_value = converter.convert(input_value, trade_date)?;
+    let gbp_value = converter.convert(amount, "USD", trade_date)?;
 
-    println!("{} on {} was {}", input_value, trade_date, gbp_value);
+    println!("{} USD on {} was {}", amount, trade_date, gbp_value);
     // Expected output: 100.00 USD on 2025-08-15 was £XX.XX
 
     Ok(())

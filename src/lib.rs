@@ -127,15 +127,8 @@ impl HMRCMonthlyRatesConverter {
         Ok(())
     }
 
-    pub fn convert(&self, value: &str, date: NaiveDate) -> Result<GBP, ConversionError> {
-        let parts: Vec<&str> = value.split_whitespace().collect();
-        if parts.len() != 2 {
-            return Err(ConversionError::InvalidInputFormat(value.to_string()));
-        }
-        let amount =
-            Decimal::from_str(parts[0]).map_err(|e| ConversionError::ValueParseError(e.to_string()))?;
-        let currency = parts[1].to_uppercase();
-
+    pub fn convert(&self, amount: Decimal, currency: &str, date: NaiveDate) -> Result<GBP, ConversionError> {
+        let currency = currency.to_uppercase();
         let rate = self.lookup_rate(&currency, date)?;
         let result = amount / rate;
         Ok(GBP(result.round_dp(2)))
@@ -174,11 +167,13 @@ mod tests {
         assert!(!converter.rates.is_empty());
     }
 
+    use rust_decimal_macros::dec;
+
     #[test]
     fn test_convert_usd() {
         let converter = HMRCMonthlyRatesConverter::new().unwrap();
         let date = NaiveDate::from_ymd_opt(2025, 8, 15).unwrap();
-        let gbp = converter.convert("100.00 USD", date).unwrap();
+        let gbp = converter.convert(dec!(100.00), "USD", date).unwrap();
         assert_eq!(gbp.to_string(), "£73.85");
     }
 
@@ -186,7 +181,7 @@ mod tests {
     fn test_convert_eur() {
         let converter = HMRCMonthlyRatesConverter::new().unwrap();
         let date = NaiveDate::from_ymd_opt(2025, 8, 15).unwrap();
-        let gbp = converter.convert("100.00 EUR", date).unwrap();
+        let gbp = converter.convert(dec!(100.00), "EUR", date).unwrap();
         assert_eq!(gbp.to_string(), "£86.60");
     }
 
@@ -194,15 +189,15 @@ mod tests {
     fn test_invalid_input() {
         let converter = HMRCMonthlyRatesConverter::new().unwrap();
         let date = NaiveDate::from_ymd_opt(2025, 8, 15).unwrap();
-        let result = converter.convert("100.00", date);
-        assert!(matches!(result, Err(ConversionError::InvalidInputFormat(_))));
+        let result = converter.convert(dec!(100.00), "", date);
+        assert!(matches!(result, Err(ConversionError::CurrencyNotFound(_, _))));
     }
 
     #[test]
     fn test_currency_not_found() {
         let converter = HMRCMonthlyRatesConverter::new().unwrap();
         let date = NaiveDate::from_ymd_opt(2025, 8, 15).unwrap();
-        let result = converter.convert("100.00 XXX", date);
+        let result = converter.convert(dec!(100.00), "XXX", date);
         assert!(matches!(result, Err(ConversionError::CurrencyNotFound(_, _))));
     }
 
@@ -210,7 +205,7 @@ mod tests {
     fn test_date_out_of_range() {
         let converter = HMRCMonthlyRatesConverter::new().unwrap();
         let date = NaiveDate::from_ymd_opt(2020, 1, 1).unwrap();
-        let result = converter.convert("100.00 USD", date);
+        let result = converter.convert(dec!(100.00), "USD", date);
         assert!(matches!(result, Err(ConversionError::DateOutOfRange(_))));
     }
 
@@ -218,7 +213,7 @@ mod tests {
     fn test_convert_on_first_day_of_month() {
         let converter = HMRCMonthlyRatesConverter::new().unwrap();
         let date = NaiveDate::from_ymd_opt(2025, 8, 1).unwrap();
-        let gbp = converter.convert("100.00 USD", date).unwrap();
+        let gbp = converter.convert(dec!(100.00), "USD", date).unwrap();
         assert_eq!(gbp.to_string(), "£73.85");
     }
 
@@ -226,7 +221,7 @@ mod tests {
     fn test_convert_on_last_day_of_month() {
         let converter = HMRCMonthlyRatesConverter::new().unwrap();
         let date = NaiveDate::from_ymd_opt(2025, 8, 31).unwrap();
-        let gbp = converter.convert("100.00 USD", date).unwrap();
+        let gbp = converter.convert(dec!(100.00), "USD", date).unwrap();
         assert_eq!(gbp.to_string(), "£73.85");
     }
 }
