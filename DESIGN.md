@@ -61,19 +61,8 @@ pub enum ConversionError {
 ### Compile-Time Embedding
 
 - **Source Data:** Raw `.xml` files from HMRC will be stored in a `data/` directory in the repository.
-- **Embedding:** The XML files will be embedded directly into the library binary at compile time using the `include_str!` macro. A helper macro or function will be used to iterate over the embedded XML strings.
-- **Parsing:** When `HMRCMonthlyRatesConverter::new()` is called, it will parse the embedded XML strings and populate the `rates` `BTreeMap`. This parsing happens once at runtime during initialization.
-
-Example of embedding (conceptual):
-```rust
-// In a new file, e.g. `src/embedded_data.rs`
-pub const XML_DATA: &[&str] = &[
-    include_str!("../../data/monthly_xml_2025-8.xml"),
-    // ... more files included here
-];
-```
-
-The `new()` function will iterate through `XML_DATA`, parse each string using `roxmltree`, and build the `rates` map.
+- **Embedding:** The `data` directory will be embedded directly into the library binary at compile time using the `include_dir` crate.
+- **Parsing:** When `HMRCMonthlyRatesConverter::new()` is called, it will iterate through the embedded files, parse the XML strings, and populate the `rates` `BTreeMap`. This parsing happens once at runtime during initialization. If multiple files define rates for the same month, the last one parsed will overwrite the previous entries.
 
 ## 3. Rate Lookup Logic
 
