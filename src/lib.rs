@@ -49,14 +49,29 @@ pub struct HMRCMonthlyRatesConverter {
     rates: BTreeMap<NaiveDate, BTreeMap<String, Decimal>>,
 }
 
+impl Default for HMRCMonthlyRatesConverter {
+    fn default() -> Self {
+        Self { rates: BTreeMap::new() }
+    }
+}
+
 impl HMRCMonthlyRatesConverter {
-    pub fn new() -> Result<Self, ConversionError> {
-        let mut rates = BTreeMap::new();
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn with_default_rates() -> Result<Self, ConversionError> {
+        let mut converter = Self::new();
+        converter.load_default_rates()?;
+        Ok(converter)
+    }
+
+    fn load_default_rates(&mut self) -> Result<(), ConversionError> {
         for file in XML_FILES.files() {
             let xml_data = file.contents();
-            Self::parse_xml_data(xml_data, &mut rates)?;
+            Self::parse_xml_data(xml_data, &mut self.rates)?;
         }
-        Ok(Self { rates })
+        Ok(())
     }
 
     pub fn from_xml(xml_data: &[u8]) -> Result<Self, ConversionError> {
@@ -190,7 +205,7 @@ mod tests {
 
     #[test]
     fn test_new_converter() {
-        let converter = HMRCMonthlyRatesConverter::new().unwrap();
+        let converter = HMRCMonthlyRatesConverter::with_default_rates().unwrap();
         assert!(!converter.rates.is_empty());
     }
 
@@ -205,7 +220,7 @@ mod tests {
 
     #[test]
     fn test_convert_usd() {
-        let converter = HMRCMonthlyRatesConverter::new().unwrap();
+        let converter = HMRCMonthlyRatesConverter::with_default_rates().unwrap();
         let date = NaiveDate::from_ymd_opt(2025, 8, 15).unwrap();
         let gbp = converter.convert(dec!(100.00), "USD", date).unwrap();
         assert_eq!(gbp.to_string(), "£73.85");
@@ -213,7 +228,7 @@ mod tests {
 
     #[test]
     fn test_convert_eur() {
-        let converter = HMRCMonthlyRatesConverter::new().unwrap();
+        let converter = HMRCMonthlyRatesConverter::with_default_rates().unwrap();
         let date = NaiveDate::from_ymd_opt(2025, 8, 15).unwrap();
         let gbp = converter.convert(dec!(100.00), "EUR", date).unwrap();
         assert_eq!(gbp.to_string(), "£86.60");
@@ -221,7 +236,7 @@ mod tests {
 
     #[test]
     fn test_invalid_input() {
-        let converter = HMRCMonthlyRatesConverter::new().unwrap();
+        let converter = HMRCMonthlyRatesConverter::with_default_rates().unwrap();
         let date = NaiveDate::from_ymd_opt(2025, 8, 15).unwrap();
         let result = converter.convert(dec!(100.00), "", date);
         assert!(matches!(result, Err(ConversionError::CurrencyNotFound(_, _))));
@@ -229,7 +244,7 @@ mod tests {
 
     #[test]
     fn test_currency_not_found() {
-        let converter = HMRCMonthlyRatesConverter::new().unwrap();
+        let converter = HMRCMonthlyRatesConverter::with_default_rates().unwrap();
         let date = NaiveDate::from_ymd_opt(2025, 8, 15).unwrap();
         let result = converter.convert(dec!(100.00), "XXX", date);
         assert!(matches!(result, Err(ConversionError::CurrencyNotFound(_, _))));
@@ -237,7 +252,7 @@ mod tests {
 
     #[test]
     fn test_date_out_of_range() {
-        let converter = HMRCMonthlyRatesConverter::new().unwrap();
+        let converter = HMRCMonthlyRatesConverter::with_default_rates().unwrap();
         let date = NaiveDate::from_ymd_opt(2014, 12, 31).unwrap();
         let result = converter.convert(dec!(100.00), "USD", date);
         assert!(matches!(result, Err(ConversionError::DateOutOfRange(_))));
@@ -245,7 +260,7 @@ mod tests {
 
     #[test]
     fn test_convert_on_first_day_of_month() {
-        let converter = HMRCMonthlyRatesConverter::new().unwrap();
+        let converter = HMRCMonthlyRatesConverter::with_default_rates().unwrap();
         let date = NaiveDate::from_ymd_opt(2025, 8, 1).unwrap();
         let gbp = converter.convert(dec!(100.00), "USD", date).unwrap();
         assert_eq!(gbp.to_string(), "£73.85");
@@ -253,7 +268,7 @@ mod tests {
 
     #[test]
     fn test_convert_on_last_day_of_month() {
-        let converter = HMRCMonthlyRatesConverter::new().unwrap();
+        let converter = HMRCMonthlyRatesConverter::with_default_rates().unwrap();
         let date = NaiveDate::from_ymd_opt(2025, 8, 31).unwrap();
         let gbp = converter.convert(dec!(100.00), "USD", date).unwrap();
         assert_eq!(gbp.to_string(), "£73.85");

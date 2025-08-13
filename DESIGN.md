@@ -19,7 +19,8 @@ pub struct HMRCMonthlyRatesConverter {
 
 It will expose methods like:
 
-- `new() -> Result<Self, ConversionError>`: Creates an instance by parsing the embedded XML exchange rate data.
+- `new() -> Self`: Creates a new, empty converter. This is useful for loading custom data.
+- `with_default_rates() -> Result<Self, ConversionError>`: Creates a new converter and loads the default exchange rate data shipped with the library.
 - `convert(&self, amount: Decimal, currency: &str, date: NaiveDate) -> Result<GBP, ConversionError>`: Finds the appropriate rate for the given date and currency, and converts the value to GBP.
 
 ### `GBP`
@@ -83,8 +84,8 @@ use chrono::NaiveDate;
 use rust_decimal_macros::dec;
 
 fn main() -> Result<(), ConversionError> {
-    // Create a converter by parsing the embedded data.
-    let converter = HMRCMonthlyRatesConverter::new()?;
+    // Create a new converter with the default rates.
+    let converter = HMRCMonthlyRatesConverter::with_default_rates()?;
 
     let trade_date = NaiveDate::from_ymd_opt(2025, 8, 15).unwrap();
     let amount = dec!(100.00);
