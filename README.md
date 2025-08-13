@@ -18,18 +18,19 @@ hmrc-rates = "0.1.0"
 ```rust
 use hmrc_rates::{HMRCMonthlyRatesConverter, ConversionError};
 use chrono::NaiveDate;
+use rust_decimal_macros::dec;
 
 fn main() -> Result<(), ConversionError> {
-    // Create a converter by parsing the embedded data.
-    let converter = HMRCMonthlyRatesConverter::new()?;
+    // Create a new converter with the default rates.
+    let converter = HMRCMonthlyRatesConverter::with_default_rates()?;
 
     let trade_date = NaiveDate::from_ymd_opt(2025, 8, 15).unwrap();
-    let input_value = "100.00 USD";
+    let amount = dec!(100.00);
 
     // Perform the conversion.
-    let gbp_value = converter.convert(input_value, trade_date)?;
+    let gbp_value = converter.convert(amount, "USD", trade_date)?;
 
-    println!("{} on {} was {}", input_value, trade_date, gbp_value);
+    println!("{} USD on {} was {}", amount, trade_date, gbp_value);
     // Expected output: 100.00 USD on 2025-08-15 was £73.85
 
     Ok(())
