@@ -204,7 +204,7 @@ mod tests {
     #[test]
     fn test_date_out_of_range() {
         let converter = HMRCMonthlyRatesConverter::new().unwrap();
-        let date = NaiveDate::from_ymd_opt(2020, 1, 1).unwrap();
+        let date = NaiveDate::from_ymd_opt(2014, 12, 31).unwrap();
         let result = converter.convert(dec!(100.00), "USD", date);
         assert!(matches!(result, Err(ConversionError::DateOutOfRange(_))));
     }
