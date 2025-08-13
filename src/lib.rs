@@ -3,7 +3,7 @@ use std::fmt;
 
 use std::str::FromStr;
 
-use chrono::NaiveDate;
+use chrono::{Datelike, NaiveDate};
 use rust_decimal::Decimal;
 use thiserror::Error;
 use xml::reader::{EventReader, XmlEvent};
@@ -65,6 +65,8 @@ impl HMRCMonthlyRatesConverter {
         Ok(Self { rates })
     }
 
+
+
     fn parse_xml_data(
         xml_data: &[u8],
         rates: &mut BTreeMap<NaiveDate, BTreeMap<String, Decimal>>,
@@ -82,16 +84,48 @@ impl HMRCMonthlyRatesConverter {
                     if name.local_name == "exchangeRateMonthList" {
                         for attr in attributes {
                             if attr.name.local_name == "Period" {
-                                let start_date_str = attr.value.split(" to ").next().ok_or_else(||
+                                let mut parts = attr.value.split(" to ");
+                                let start_date_str = parts.next().ok_or_else(||
                                     ConversionError::DateParseError(format!(
                                         "Invalid Period format: {}",
                                         attr.value
                                     ))
                                 )?;
-                                month_date = Some(
-                                    NaiveDate::parse_from_str(start_date_str, "%d/%b/%Y")
-                                        .map_err(|e| ConversionError::DateParseError(e.to_string()))?,
-                                );
+                                let end_date_str = parts.next().ok_or_else(||
+                                    ConversionError::DateParseError(format!(
+                                        "Invalid Period format: {}",
+                                        attr.value
+                                    ))
+                                )?;
+
+                                let start_date = NaiveDate::parse_from_str(start_date_str, "%d/%b/%Y")
+                                    .map_err(|e| ConversionError::DateParseError(e.to_string()))?;
+
+                                if start_date.day() != 1 {
+                                    return Err(ConversionError::DateParseError(
+                                        "Period start date is not the 1st of the month".to_string(),
+                                    ));
+                                }
+
+                                let end_date = NaiveDate::parse_from_str(end_date_str, "%d/%b/%Y")
+                                    .map_err(|e| ConversionError::DateParseError(e.to_string()))?;
+
+                                let last_day_of_month = NaiveDate::from_ymd_opt(
+                                    start_date.year(),
+                                    start_date.month() + 1,
+                                    1,
+                                )
+                                .unwrap_or(NaiveDate::from_ymd_opt(start_date.year() + 1, 1, 1).unwrap())
+                                .pred_opt()
+                                .unwrap();
+
+                                if end_date != last_day_of_month {
+                                    return Err(ConversionError::DateParseError(
+                                        "Period end date is not the last day of the month".to_string(),
+                                    ));
+                                }
+
+                                month_date = Some(start_date);
                             }
                         }
                     } else if name.local_name == "currencyCode" {
@@ -223,5 +257,19 @@ mod tests {
         let date = NaiveDate::from_ymd_opt(2025, 8, 31).unwrap();
         let gbp = converter.convert(dec!(100.00), "USD", date).unwrap();
         assert_eq!(gbp.to_string(), "£73.85");
+    }
+
+    #[test]
+    fn test_malformed_period() {
+        let xml_data = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<exchangeRateMonthList Period=\"02/Aug/2025 to 31/Aug/2025\">\n</exchangeRateMonthList>\n";
+        let result = HMRCMonthlyRatesConverter::from_xml(xml_data.as_bytes());
+        assert!(matches!(result, Err(ConversionError::DateParseError(_))));
+    }
+
+    #[test]
+    fn test_incorrect_end_date() {
+        let xml_data = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<exchangeRateMonthList Period=\"01/Aug/2025 to 30/Aug/2025\">\n</exchangeRateMonthList>\n";
+        let result = HMRCMonthlyRatesConverter::from_xml(xml_data.as_bytes());
+        assert!(matches!(result, Err(ConversionError::DateParseError(_))));
     }
 }
