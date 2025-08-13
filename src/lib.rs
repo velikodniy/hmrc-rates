@@ -184,14 +184,11 @@ impl HMRCMonthlyRatesConverter {
     }
 
     fn lookup_rate(&self, currency: &str, date: NaiveDate) -> Result<Decimal, ConversionError> {
-        let month_rates = self
-            .rates
+        self.rates
             .range(..=date)
             .next_back()
             .map(|(_, rates)| rates)
-            .ok_or(ConversionError::DateOutOfRange(date))?;
-
-        month_rates
+            .ok_or(ConversionError::DateOutOfRange(date))?
             .get(currency)
             .cloned()
             .ok_or_else(|| ConversionError::CurrencyNotFound(currency.to_string(), date))
