@@ -2,6 +2,10 @@
 name = "hmrc-rates"
 version = "0.1.0"
 edition = "2024"
+description = "A Rust library for converting currencies to GBP using HMRC monthly exchange rates."
+license = "MIT"
+homepage = "https://github.com/velikodniy/hmrc-rates"
+repository = "https://github.com/velikodniy/hmrc-rates"
 
 [dependencies]
 chrono = { version = "0.4", features = ["serde"] }
