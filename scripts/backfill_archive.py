@@ -79,25 +79,26 @@ WEEKLY_SOURCES = [
 # Trade-tariff HTML views: spot periods listed by the API without downloadable files.
 SPOT_HTML_PERIODS = ["2021-3", "2021-12", "2022-3", "2022-12", "2023-3"]
 
-# Period-aware code overrides for redenominated/pre-euro currencies
-# (period end <= cutoff). Keys are match-normalized (letters only, "and" removed).
+# Period-aware code overrides for redenominated/pre-euro currencies (period <=
+# cutoff). Country-keyed: unit labels are unreliable (Estonia's kroon-era rows
+# say "Euro"), and each country had a single currency before its cutoff.
 REDENOMINATIONS = {
-    ("zambia", "kwacha"): ("2013-03", "ZMK"),
-    ("belarus", "rouble"): ("2016-07", "BYR"),
-    ("venezuela", "bolivarfuerte"): ("2018-08", "VEF"),
-    ("mauritania", "ouguiya"): ("2017-12", "MRO"),
-    ("saotomeprincipe", "dobra"): ("2018-03", "STD"),
-    ("estonia", "kroon"): ("2010-12", "EEK"),
-    ("latvia", "lat"): ("2013-12", "LVL"),
-    ("lithuania", "litas"): ("2014-12", "LTL"),
-    ("sierraleone", "leone"): ("2022-03", "SLL"),
+    "zambia": ("2013-03", "ZMK"),
+    "belarus": ("2016-07", "BYR"),
+    "venezuela": ("2018-08", "VEF"),
+    "mauritania": ("2017-12", "MRO"),
+    "saotomeprincipe": ("2018-03", "STD"),
+    "estonia": ("2010-12", "EEK"),
+    "latvia": ("2013-12", "LVL"),
+    "lithuania": ("2014-12", "LTL"),
+    "sierraleone": ("2022-03", "SLL"),
 }
 
 # Euro-transition rows whose period straddles adoption: blended, meaningless values.
 DROP_ROWS = {
-    ("estonia", "kroon", "2011-03"),
-    ("latvia", "lat", "2014-03"),
-    ("lithuania", "litas", "2015-03"),
+    ("estonia", "2011-03"),
+    ("latvia", "2014-03"),
+    ("lithuania", "2015-03"),
 }
 
 # The row that wins when several countries share a code with differing values.
@@ -165,16 +166,16 @@ def build_code_map() -> dict:
 def resolve_code(code_map: dict, country: str, unit: str, period: str) -> tuple[str, int] | None:
     """-> (code, confidence 3..1) or None; None also for dropped transition rows."""
     c, u = match_key(country), match_key(unit)
-    for dc, du, dp in DROP_ROWS:
-        if c.startswith(dc) and du in u and period == dp:
+    for dc, dp in DROP_ROWS:
+        if c.startswith(dc) and period == dp:
             return None
     # Explicit code prefix in the unit name ("AUD Dollar") — but names like
     # "CFA Franc" also start with three capitals, so gate on known codes.
     m = re.match(r"^([A-Z]{3})\s+", unit.strip())
     if m and m.group(1) in code_map["codes"]:
         return m.group(1), 3
-    for (rc, ru), (cutoff, code) in REDENOMINATIONS.items():
-        if c.startswith(rc) and ru in u and period <= cutoff:
+    for rc, (cutoff, code) in REDENOMINATIONS.items():
+        if c.startswith(rc) and period <= cutoff:
             return code, 3
     if (c, u) in code_map["pair"]:
         return code_map["pair"][(c, u)], 2
