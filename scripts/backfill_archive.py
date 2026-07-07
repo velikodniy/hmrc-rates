@@ -79,14 +79,36 @@ WEEKLY_SOURCES = [
 # Trade-tariff HTML views: spot periods listed by the API without downloadable files.
 SPOT_HTML_PERIODS = ["2021-3", "2021-12", "2022-3", "2022-12", "2023-3"]
 
-# Period-aware code overrides for redenominated currencies (period end <= cutoff).
-# Keys are match-normalized (lowercase letters only, "and" removed).
+# Period-aware code overrides for redenominated/pre-euro currencies
+# (period end <= cutoff). Keys are match-normalized (letters only, "and" removed).
 REDENOMINATIONS = {
     ("zambia", "kwacha"): ("2013-03", "ZMK"),
     ("belarus", "rouble"): ("2016-07", "BYR"),
     ("venezuela", "bolivarfuerte"): ("2018-08", "VEF"),
     ("mauritania", "ouguiya"): ("2017-12", "MRO"),
     ("saotomeprincipe", "dobra"): ("2018-03", "STD"),
+    ("estonia", "kroon"): ("2010-12", "EEK"),
+    ("latvia", "lat"): ("2013-12", "LVL"),
+    ("lithuania", "litas"): ("2014-12", "LTL"),
+    ("sierraleone", "leone"): ("2022-03", "SLL"),
+}
+
+# Euro-transition rows whose period straddles adoption: blended, meaningless values.
+DROP_ROWS = {
+    ("estonia", "kroon", "2011-03"),
+    ("latvia", "lat", "2014-03"),
+    ("lithuania", "litas", "2015-03"),
+}
+
+# The row that wins when several countries share a code with differing values.
+PRINCIPALS = {
+    "USD": {"usa"},
+    "EUR": {"eurozone", "europeancommunity"},
+    "AED": {"abudhabi"},
+    "XCD": {"antigua"},
+    "XOF": {"benin"},
+    "XAF": {"cameroon"},
+    "CHF": {"switzerl"},  # "Switzerland" minus "and"
 }
 
 log = lambda *a: print(*a, file=sys.stderr)
@@ -124,7 +146,7 @@ def match_key(s: str) -> str:
 
 def build_code_map() -> dict:
     """(country, currency-name) and country -> code, from all monthly XMLs (latest wins)."""
-    by_pair, by_country = {}, {}
+    by_pair, by_country, codes = {}, {}, set()
     for path in sorted(DATA.glob("monthly/*.xml")):
         root = ET.parse(path).getroot()
         for entry in root:
@@ -135,20 +157,27 @@ def build_code_map() -> dict:
                 continue
             by_pair[(country, name)] = code
             by_country.setdefault(country, set()).add(code)
-    return {"pair": by_pair, "country": by_country}
+            codes.add(code)
+    codes.update(code for _, code in REDENOMINATIONS.values())
+    return {"pair": by_pair, "country": by_country, "codes": codes}
 
 
-def resolve_code(code_map: dict, country: str, unit: str, period: str) -> str | None:
+def resolve_code(code_map: dict, country: str, unit: str, period: str) -> tuple[str, int] | None:
+    """-> (code, confidence 3..1) or None; None also for dropped transition rows."""
     c, u = match_key(country), match_key(unit)
-    # Explicit code prefix in the unit name ("AUD Dollar").
+    for dc, du, dp in DROP_ROWS:
+        if c.startswith(dc) and du in u and period == dp:
+            return None
+    # Explicit code prefix in the unit name ("AUD Dollar") — but names like
+    # "CFA Franc" also start with three capitals, so gate on known codes.
     m = re.match(r"^([A-Z]{3})\s+", unit.strip())
-    if m:
-        return m.group(1)
+    if m and m.group(1) in code_map["codes"]:
+        return m.group(1), 3
     for (rc, ru), (cutoff, code) in REDENOMINATIONS.items():
         if c.startswith(rc) and ru in u and period <= cutoff:
-            return code
+            return code, 3
     if (c, u) in code_map["pair"]:
-        return code_map["pair"][(c, u)]
+        return code_map["pair"][(c, u)], 2
     # Country match: exact, else unique prefix in either direction.
     countries = [c] if c in code_map["country"] else [
         k for k in code_map["country"] if k and c and (k.startswith(c) or c.startswith(k))
@@ -156,14 +185,14 @@ def resolve_code(code_map: dict, country: str, unit: str, period: str) -> str | 
     if len(countries) == 1:
         codes = code_map["country"][countries[0]]
         if len(codes) == 1:
-            return next(iter(codes))
+            return next(iter(codes)), 1
         candidates = {
             v
             for (kc, ku), v in code_map["pair"].items()
             if kc == countries[0] and (ku.startswith(u) or u.startswith(ku))
         }
         if len(candidates) == 1:
-            return candidates.pop()
+            return candidates.pop(), 1
     return None
 
 
@@ -236,27 +265,58 @@ def parse_wide_csv(text: str, fallback_periods: list) -> dict[str, list[tuple[st
     return {p: rows_ for p, rows_ in out.items() if rows_}
 
 
+def monthly_reference(period: str) -> dict[str, float]:
+    """code -> monthly rate for cross-checking spot values (empty pre-2014)."""
+    path = DATA / "monthly" / f"{period}.xml"
+    if not path.exists():
+        return {}
+    out = {}
+    for entry in ET.parse(path).getroot():
+        code = (entry.findtext("currencyCode") or "").strip()
+        try:
+            out[code] = float(entry.findtext("rateNew") or "")
+        except ValueError:
+            pass
+    return out
+
+
 def write_canonical(kind: str, period: str, rows: list[tuple[str, str, str, str]], code_map: dict) -> None:
     target = DATA / kind / f"{period}.csv"
     dropped = []
+    reference = monthly_reference(period) if kind == "spot" else {}
+
+    # code -> best (confidence, principal, precision) row; warn on discarded values.
+    by_code: dict[str, tuple] = {}
+    for country, unit, sterling, rate in rows:
+        resolved = resolve_code(code_map, country, unit, period)
+        if resolved is None:
+            dropped.append(f"{country}/{unit.strip()}")
+            continue
+        code, confidence = resolved
+        if reference.get(code) and not 0.5 < float(rate) / reference[code] < 2.0:
+            dropped.append(f"{country}/{unit.strip()} ({code} {rate} vs monthly {reference[code]})")
+            continue
+        unit_clean = unit.strip().removeprefix(f"{code} ").strip()
+        principal = match_key(country) in PRINCIPALS.get(code, {match_key(country)})
+        precision = len(rate.split(".")[1]) if "." in rate else 0
+        candidate = (confidence, principal, precision, country, unit_clean, sterling, rate)
+        best = by_code.get(code)
+        if best is None or candidate[:3] > best[:3]:
+            if best is not None and best[6] != rate:
+                log(f"  {period} {code}: kept {rate} ({country}), discarded {best[6]} ({best[3]})")
+            by_code[code] = candidate
+        elif best[6] != rate:
+            log(f"  {period} {code}: kept {best[6]} ({best[3]}), discarded {rate} ({country})")
+
     out = io.StringIO()
     writer = csv.writer(out, lineterminator="\n")
     writer.writerow(CANONICAL_HEADER)
-    seen = set()
-    for country, unit, sterling, rate in rows:
-        code = resolve_code(code_map, country, unit, period)
-        if code is None:
-            dropped.append(f"{country}/{unit}")
-            continue
-        unit_clean = re.sub(r"^[A-Z]{3}\s+", "", unit).strip()
-        key = (country, code)
-        if key in seen:
-            continue
-        seen.add(key)
+    for code in sorted(by_code):
+        _, _, _, country, unit_clean, sterling, rate = by_code[code]
         writer.writerow([country, unit_clean, code, sterling, rate])
     target.write_text(out.getvalue(), encoding="utf-8")
     note = f" (dropped: {', '.join(dropped)})" if dropped else ""
-    log(f"wrote {target} ({len(seen)} rows){note}")
+    log(f"wrote {target} ({len(by_code)} rows){note}")
 
 
 # --- series backfills ----------------------------------------------------------

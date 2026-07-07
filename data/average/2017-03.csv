@@ -1,168 +1,145 @@
 Country,Unit Of Currency,Currency Code,Sterling value of Currency Unit £,Currency Units per £1
 Abu Dhabi,Dirham,AED,0.2053,4.870015
 Albania,Lek,ALL,0.0061,165.255417
-Algeria,Dinar,DZD,0.0069,145.760208
-Angola,Readj Kwanza,AOA,0.0046,219.334167
-Antigua,E Caribbean Dollar,XCD,0.2793,3.579938
-Argentina,Peso,ARS,0.0505,19.813125
 Armenia,Dram,AMD,0.0016,635.039167
-Aruba,Florin,AWG,0.4213,2.373610
+Angola,Readj Kwanza,AOA,0.0046,219.334167
+Argentina,Peso,ARS,0.0505,19.813125
 Australia,Dollar,AUD,0.5660,1.766681
+Aruba,Florin,AWG,0.4213,2.373610
 Azerbaijan,New Manat,AZN,0.4615,2.166667
-Bahamas,Dollar,BSD,0.7533,1.327506
-Bahrain,Dinar,BHD,2.0001,0.499965
-Bangladesh,Taka,BDT,0.0096,104.331667
+Bosnia- Herzegovinia,Marka,BAM,0.4235,2.361131
 Barbados,Dollar,BBD,0.3771,2.651663
+Bangladesh,Taka,BDT,0.0096,104.331667
+Bulgaria,Lev,BGN,0.4235,2.361273
+Bahrain,Dinar,BHD,2.0001,0.499965
+Burundi,Franc,BIF,0.0005,2181.288750
+Bermuda,Dollar (US),BMD,0.7533,1.327506
+Brunei,Dollar,BND,0.2991,3.343550
+Bolivia,Boliviano,BOB,0.1090,9.170683
+Brazil,Real,BRL,0.2256,4.433554
+Bahamas,Dollar,BSD,0.7533,1.327506
+Bhutan,Ngultrum,BTN,0.0112,89.215625
+Botswana,Pula,BWP,0.0702,14.237492
 Belarus,Rouble,BYN,0.3936,2.540750
 Belize,Dollar,BZD,0.3767,2.654854
-Benin,Franc,CFA,0.0013,791.886667
-Bermuda,Dollar (US),BMD,0.7533,1.327506
-Bhutan,Ngultrum,BTN,0.0112,89.215625
-Bolivia,Boliviano,BOB,0.1090,9.170683
-Bosnia- Herzegovinia,Marka,BAM,0.4235,2.361131
-Botswana,Pula,BWP,0.0702,14.237492
-Brazil,Real,BRL,0.2256,4.433554
-Brunei,Dollar,BND,0.2991,3.343550
-Bulgaria,Lev,BGN,0.4235,2.361273
-Burkina Faso,Franc,CFA,0.0013,791.886667
-Burundi,Franc,BIF,0.0005,2181.288750
-Cambodia,Riel,KHR,0.0002,5123.295000
-Cameroon Republic,Franc,CFA,0.0013,791.886667
 Canada,Dollar,CAD,0.5778,1.730748
-Cape Verde Islands,Escudo,CVE,0.0075,133.193333
-Cayman Islands,Dollar,KYD,0.9199,1.087065
-Central African Republic,Franc,CFA,0.0013,791.886667
-Chad,Franc,CFA,0.0013,791.886667
+Congo (DemRep),Congo Fr,CDF,0.0008,1272.947917
+Switzerland,Franc,CHF,0.7638,1.309300
 Chile,Peso,CLP,0.0011,886.574792
 China,Yuan,CNY,0.1127,8.870269
 Colombia,Peso,COP,0.0003,3943.479375
-Comoros,Franc,KMF,0.0017,593.913958
-Congo (Brazaville),Franc,CFA,0.0013,791.886667
-Congo (DemRep),Congo Fr,CDF,0.0008,1272.947917
 Costa Rica,Colon,CRC,0.0014,724.224375
-Cote d'Ivoire,Franc,CFA,0.0013,791.886667
-Croatia,Kuna,HRK,0.1104,9.058758
 Cuba,Peso,CUP,0.7542,1.325902
+Cape Verde Islands,Escudo,CVE,0.0075,133.193333
 Czech Republic,Koruna,CZK,0.0307,32.624567
-Denmark,Krone,DKK,0.1113,8.985713
 Djibouti,Franc,DJF,0.0042,235.633750
-Dominica,E Caribbean Dollar,XCD,0.2793,3.579938
+Denmark,Krone,DKK,0.1113,8.985713
 Dominican Republic,Peso,DOP,0.0163,61.189167
-Dubai,Dirham,AED,0.2053,4.870015
+Algeria,Dinar,DZD,0.0069,145.760208
 Ecuador,Dollar,ECS,0.7533,1.327506
 Egypt,Pound,EGP,0.0644,15.525625
-El Salvador,Colon,SVC,0.0862,11.596250
-Equatorial Guinea,Franc,CFA,0.0013,791.886667
 Eritrea,Nakfa,ERN,0.0503,19.882083
 Ethiopia,Birr,ETB,0.0342,29.262083
 Eurozone,Euro,EUR,0.8280,1.207700
 Fiji Islands,Dollar,FJD,0.3625,2.758275
-Fr. Polynesia,Franc,CFP,0.0069,144.055417
-Gabon,Franc,CFA,0.0013,791.886667
-Gambia,Dalasi,GMD,0.0175,57.026875
 Georgia,Lari,GEL,0.3159,3.165079
 Ghana,Cedi,GHS,0.1877,5.328192
-Grenada,E Caribbean Dollar,XCD,0.2793,3.579938
-Guatemala,Quetzal,GTQ,0.0996,10.041267
-Guinea Bissau,Franc,CFA,0.0013,791.886667
+Gambia,Dalasi,GMD,0.0175,57.026875
 Guinea Republic,Franc,GNF,0.0001,9557.783333
+Guatemala,Quetzal,GTQ,0.0996,10.041267
 Guyana,Dollar,GYD,0.0036,274.862500
-Haiti,Gourde,HTG,0.0117,85.698750
-Honduras,Lempira,HNL,0.0328,30.481250
 Hong Kong,Dollar,HKD,0.0971,10.296783
+Honduras,Lempira,HNL,0.0328,30.481250
+Croatia,Kuna,HRK,0.1104,9.058758
+Haiti,Gourde,HTG,0.0117,85.698750
 Hungary,Forint,HUF,0.0027,375.333958
-Iceland,Krona,ISK,0.0064,156.928542
-India,Rupee,INR,0.0112,89.215625
 Indonesia,Rupiah,IDR,0.0001,17584.318960
-Iraq,Dinar,IQD,0.0006,1567.591250
 Israel,Shekel,ILS,0.1977,5.057563
+India,Rupee,INR,0.0112,89.215625
+Iraq,Dinar,IQD,0.0006,1567.591250
+Iceland,Krona,ISK,0.0064,156.928542
 Jamaica,Dollar,JMD,0.0060,167.475417
-Japan,Yen,JPY,0.0069,144.307083
 Jordan,Dinar,JOD,1.0637,0.940108
-Kazakhstan,Tenge,KZT,0.0023,443.701458
+Japan,Yen,JPY,0.0069,144.307083
 Kenya,Schilling,KES,0.0074,135.004375
-Kuwait,Dinar,KWD,2.4895,0.401694
 Kyrgyz Republic,Som,KGS,0.0110,91.083333
+Cambodia,Riel,KHR,0.0002,5123.295000
+Comoros,Franc,KMF,0.0017,593.913958
+South Korea,Won,KRW,0.0007,1529.039792
+Kuwait,Dinar,KWD,2.4895,0.401694
+Cayman Islands,Dollar,KYD,0.9199,1.087065
+Kazakhstan,Tenge,KZT,0.0023,443.701458
 Lao People's Dem Rep,Kip,LAK,0.0001,10799.850420
 Lebanon,Pound,LBP,0.0005,1999.260000
+Sri Lanka,Rupee,LKR,0.0051,195.195625
 Lesotho,Loti,LSL,0.0529,18.895000
-Liberia,Dollar (US),USD,0.7533,1.327506
 Libya,Dinar,LYD,0.5469,1.828590
-Macao,Pataca,MOP,0.0944,10.592617
-Macedonia,Denar,MKD,0.0135,74.335625
+Morocco,Dirham,MAD,0.0766,13.060625
+Moldova,Leu,MDL,0.0380,26.318958
 Madagascar,Malagasy Ariary,MGA,0.0002,4223.932083
-Malawi,Kwacha,MWK,0.0011,944.816875
-Malaysia,Ringgit,MYR,0.1810,5.525885
-Maldive Islands,Rufiyaa,MVR,0.0492,20.336667
-Mali Republic,Franc,CFA,0.0013,791.886667
+Macedonia,Denar,MKD,0.0135,74.335625
+Myanmar,Kyat,MMK,0.0006,1659.734167
+Mongolia,Tugrik,MNT,0.0003,2935.977500
+Macao,Pataca,MOP,0.0944,10.592617
 Mauritania,Ouguiya,MRO,0.0021,471.101667
 Mauritius,Rupee,MUR,0.0213,47.026042
+Maldive Islands,Rufiyaa,MVR,0.0492,20.336667
+Malawi,Kwacha,MWK,0.0011,944.816875
 Mexico,Mexican Peso,MXN,0.0393,25.433958
-Moldova,Leu,MDL,0.0380,26.318958
-Mongolia,Tugrik,MNT,0.0003,2935.977500
-Montserrat,E Caribbean Dollar,XCD,0.2793,3.579938
-Morocco,Dirham,MAD,0.0766,13.060625
+Malaysia,Ringgit,MYR,0.1810,5.525885
 Mozambique,Metical,MZN,0.0114,87.956667
-Myanmar,Kyat,MMK,0.0006,1659.734167
-Nepal,Rupee,NPR,0.0070,142.607917
-New Caledonia,Franc,CFP,0.0069,144.055417
-New Zealand,Dollar,NZD,0.5316,1.881252
-Nicaragua,Gold Cordoba,NIO,0.0261,38.249977
-Niger Republic,Franc,CFA,0.0013,791.886667
 Nigeria,Naira,NGN,0.0027,372.817917
+Nicaragua,Gold Cordoba,NIO,0.0261,38.249977
 Norway,Norwegian Krone,NOK,0.0903,11.078125
+Nepal,Rupee,NPR,0.0070,142.607917
+New Zealand,Dollar,NZD,0.5316,1.881252
 Oman,Rial,OMR,1.9587,0.510533
-Pakistan,Rupee,PKR,0.0072,138.893542
 Panama,Balboa,PAB,0.7542,1.325902
-Papua New Guinea,Kina,PGK,0.2385,4.192831
-Paraguay,Guarani,PYG,0.0001,7464.898750
 Peru,New Sol,PEN,0.2261,4.423800
+Papua New Guinea,Kina,PGK,0.2385,4.192831
 Philippines,Peso,PHP,0.0157,63.514375
+Pakistan,Rupee,PKR,0.0072,138.893542
 Poland,Zloty,PLN,0.1902,5.256254
+Paraguay,Guarani,PYG,0.0001,7464.898750
 Qatar,Riyal,QAR,0.2071,4.827790
 Romania,New Leu,RON,0.1844,5.422944
+Serbia,Dinar,RSD,0.0067,148.926458
 Russia,Rouble,RUB,0.0119,84.216875
 Rwanda,Franc,RWF,0.0009,1056.958125
-Saotome and Principe,Dobra,STD,0.0000,26963.369180
 Saudi Arabia,Riyal,SAR,0.2008,4.978908
-Senegal,Franc,CFA,0.0013,791.886667
-Serbia,Dinar,RSD,0.0067,148.926458
-Seychelles,Rupee,SCR,0.0565,17.704583
-Sierra Leone,Leone,SLE,0.0001,7017.533750
-Singapore,Dollar,SGD,0.5452,1.834148
 Soloman Islands,Dollar,SBD,0.0965,10.367517
-Somali Republic,Schilling,SOS,0.0013,776.039167
-South Africa,Rand,ZAR,0.0529,18.903750
-South Korea,Won,KRW,0.0007,1529.039792
-Sri Lanka,Rupee,LKR,0.0051,195.195625
-St Christopher and Anguilla,E Caribbean Dollar,XCD,0.2793,3.579938
-St Lucia,E Caribbean Dollar,XCD,0.2793,3.579938
-St Vincent,E Caribbean Dollar,XCD,0.2793,3.579938
+Seychelles,Rupee,SCR,0.0565,17.704583
 Sudan Republic,Pound,SDG,0.1216,8.224729
-Surinam,Dollar,SRD,0.1095,9.132498
-Swaziland,Lilangeni,SZL,0.0529,18.895000
 Sweden,Krona,SEK,0.0876,11.421667
-Switzerland,Franc,CHF,0.7638,1.309300
+Singapore,Dollar,SGD,0.5452,1.834148
+Sierra Leone,Leone,SLL,0.0001,7017.533750
+Somali Republic,Schilling,SOS,0.0013,776.039167
+Surinam,Dollar,SRD,0.1095,9.132498
+Saotome and Principe,Dobra,STD,0.0000,26963.369180
+El Salvador,Colon,SVC,0.0862,11.596250
+Swaziland,Lilangeni,SZL,0.0529,18.895000
+Thailand,Baht,THB,0.0214,46.692083
+Turkmenistan,New Manat,TMT,0.2153,4.644727
+Tunisia,Dinar,TND,0.3447,2.901442
+Tonga Islands,Pa'anga (AUS),TOP,0.5660,1.766681
+Turkey,Turkish  Lira,TRY,0.2395,4.175619
+Trinidad/Tobago,Dollar,TTD,0.1128,8.867246
 Taiwan,Dollar,TWD,0.0236,42.342708
 Tanzania,Schilling,TZS,0.0003,2909.941875
-Thailand,Baht,THB,0.0214,46.692083
-Togo Republic,Franc,CFA,0.0013,791.886667
-Tonga Islands,Pa'anga (AUS),TOP,0.5660,1.766681
-Trinidad/Tobago,Dollar,TTD,0.1128,8.867246
-Tunisia,Dinar,TND,0.3447,2.901442
-Turkey,Turkish  Lira,TRY,0.2395,4.175619
-Turkmenistan,New Manat,TMT,0.2153,4.644727
-UAE,Dirham,AED,0.2053,4.870015
-Uganda,Schilling,UGX,0.0002,4556.602917
 Ukraine,Hryvnia,UAH,0.0293,34.161667
-Uruguay,Peso,UYU,0.0254,39.413750
+Uganda,Schilling,UGX,0.0002,4556.602917
 USA,Dollar,USD,0.7533,1.327506
+Uruguay,Peso,UYU,0.0254,39.413750
 Uzbekistan,Sum,UZS,0.0002,4029.228958
-Vanuatu,Vatu,VUV,0.0068,146.318125
 Venezuela,Bolivar Fuerte,VEF,0.0761,13.133100
 Vietnam,Dong,VND,0.0000,29726.643330
-Wallis and Futuna Islands,Franc,CFP,0.0069,144.055417
+Vanuatu,Vatu,VUV,0.0068,146.318125
 Western Samoa,Tala,WST,0.2984,3.351075
+Cameroon Republic,CFA Franc,XAF,0.0013,791.886667
+Antigua,E Caribbean Dollar,XCD,0.2793,3.579938
+Benin,CFA Franc,XOF,0.0013,791.886667
+Fr. Polynesia,CFP Franc,XPF,0.0069,144.055417
 Yemen (Rep of),Rial,YER,0.0030,329.275000
+South Africa,Rand,ZAR,0.0529,18.903750
 Zambia,Kwacha,ZMW,0.0756,13.219792
 Zimbabwe,Dollar,ZWL,0.0021,479.838958

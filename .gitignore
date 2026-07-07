@@ -7,3 +7,4 @@
 
 #/target
 .backfill-cache/
+scripts/__pycache__/

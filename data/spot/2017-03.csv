@@ -1,12 +1,12 @@
 Country,Unit Of Currency,Currency Code,Sterling value of Currency Unit £,Currency Units per £1
 Australia,Dollar,AUD,0.6143,1.627900
 Canada,Dollar,CAD,0.6022,1.660500
+Switzerland,Franc,CHF,0.8036,1.244400
 Denmark,Krone,DKK,0.1155,8.654700
 Eurozone,Euro,EUR,0.8593,1.163700
 Hong Kong,Dollar,HKD,0.103,9.707600
 Japan,Yen,JPY,0.0072,139.030000
 Norway,Norwegian Krone,NOK,0.0938,10.660000
-South Africa,Rand,ZAR,0.0624,16.030000
 Sweden,Krona,SEK,0.0899,11.120000
-Switzerland,Franc,CHF,0.8036,1.244400
 USA,Dollar,USD,0.8004,1.249300
+South Africa,Rand,ZAR,0.0624,16.030000
