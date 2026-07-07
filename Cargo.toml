@@ -53,3 +53,7 @@ expect_used = "deny"
 panic = "deny"
 todo = "deny"
 unimplemented = "deny"
+
+[[example]]
+name = "fresh"
+required-features = ["http"]
