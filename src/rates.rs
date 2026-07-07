@@ -98,11 +98,7 @@ impl Rates {
     ///
     /// Accepts anything convertible to [`Month`], including `chrono::NaiveDate`.
     /// `"GBP"` (any case) returns the identity rate for any month.
-    pub fn monthly_rate(
-        &self,
-        code: &str,
-        month: impl Into<Month>,
-    ) -> Result<Rate, LookupError> {
+    pub fn monthly_rate(&self, code: &str, month: impl Into<Month>) -> Result<Rate, LookupError> {
         let month = month.into();
         // £1 = £1 holds for every month, published or not.
         if Currency::normalize(code) == Some(Currency::GBP.code()) {
@@ -130,7 +126,11 @@ impl Rates {
         }
         if let Some(code) = Currency::normalize(code) {
             if code == Currency::GBP.code() {
-                return Ok(Rate::new(Decimal::ONE, Currency::GBP, Period::Month(requested)));
+                return Ok(Rate::new(
+                    Decimal::ONE,
+                    Currency::GBP,
+                    Period::Month(requested),
+                ));
             }
         }
         Err(self.period_missing(RateType::Monthly, Period::Month(requested)))
@@ -168,7 +168,9 @@ impl Rates {
     pub fn weekly(&self, date: NaiveDate) -> Result<Table<'_>, LookupError> {
         let day = date_to_day(date);
         if let Some((week, entries)) = self.weeks.containing(day) {
-            if let (Some(start), Some(end)) = (day_to_date(week.start_day), day_to_date(week.end_day)) {
+            if let (Some(start), Some(end)) =
+                (day_to_date(week.start_day), day_to_date(week.end_day))
+            {
                 return Ok(Table {
                     rate_type: RateType::Weekly,
                     period: Period::Week { start, end },
@@ -199,7 +201,10 @@ impl Rates {
         };
         Err(LookupError::PeriodNotAvailable {
             table: RateType::Weekly,
-            period: Period::Week { start: date, end: date },
+            period: Period::Week {
+                start: date,
+                end: date,
+            },
             available,
         })
     }
@@ -222,7 +227,10 @@ impl Rates {
     /// All weekly-amendment validity ranges, ascending, as [`Period::Week`] items.
     pub fn weeks(&self) -> impl DoubleEndedIterator<Item = Period> + use<'_> {
         self.weeks.index().iter().filter_map(|w| {
-            Some(Period::Week { start: day_to_date(w.start_day)?, end: day_to_date(w.end_day)? })
+            Some(Period::Week {
+                start: day_to_date(w.start_day)?,
+                end: day_to_date(w.end_day)?,
+            })
         })
     }
 
@@ -271,9 +279,16 @@ impl Rates {
 
     fn period_missing(&self, table: RateType, period: Period) -> LookupError {
         let available = self.monthly.first_last().map(|(f, l)| {
-            (Period::Month(Month::from_key(f)), Period::Month(Month::from_key(l)))
+            (
+                Period::Month(Month::from_key(f)),
+                Period::Month(Month::from_key(l)),
+            )
         });
-        LookupError::PeriodNotAvailable { table, period, available }
+        LookupError::PeriodNotAvailable {
+            table,
+            period,
+            available,
+        }
     }
 }
 
@@ -392,7 +407,13 @@ mod empty_tests {
         let Some(month) = month else { return };
         let result = rates.monthly_rate("USD", month);
         assert!(
-            matches!(result, Err(LookupError::PeriodNotAvailable { available: None, .. })),
+            matches!(
+                result,
+                Err(LookupError::PeriodNotAvailable {
+                    available: None,
+                    ..
+                })
+            ),
             "unexpected: {result:?}"
         );
         assert!(rates.months().next().is_none());
@@ -409,10 +430,17 @@ mod bundled_tests {
 
     #[test]
     fn statics_hold_codegen_invariants() {
-        for series in [&crate::bundled::MONTHLY, &crate::bundled::SPOT, &crate::bundled::AVERAGE] {
+        for series in [
+            &crate::bundled::MONTHLY,
+            &crate::bundled::SPOT,
+            &crate::bundled::AVERAGE,
+        ] {
             let mut start = 0usize;
             for pair in series.index.windows(2) {
-                assert!(pair[0].key < pair[1].key, "index keys not strictly ascending");
+                assert!(
+                    pair[0].key < pair[1].key,
+                    "index keys not strictly ascending"
+                );
             }
             for idx in series.index {
                 let table = &series.arena[start..idx.end as usize];

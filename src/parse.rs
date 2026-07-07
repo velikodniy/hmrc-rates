@@ -46,7 +46,9 @@ pub fn parse_rate_decimal(s: &str) -> Result<(u64, u8), ParseError> {
     if int_part.is_empty() && frac_part.is_empty() {
         return err(format!("empty rate '{s}'"));
     }
-    if !int_part.bytes().all(|b| b.is_ascii_digit()) || !frac_part.bytes().all(|b| b.is_ascii_digit()) {
+    if !int_part.bytes().all(|b| b.is_ascii_digit())
+        || !frac_part.bytes().all(|b| b.is_ascii_digit())
+    {
         return err(format!("malformed rate '{s}'"));
     }
     if frac_part.len() > 9 {
@@ -85,17 +87,22 @@ const MONTHS: [&str; 12] = [
 fn parse_dmy(s: &str) -> Result<(i32, u32, u32), ParseError> {
     // "01/Jul/2026"
     let mut parts = s.trim().split('/');
-    let (Some(d), Some(m), Some(y), None) = (parts.next(), parts.next(), parts.next(), parts.next())
+    let (Some(d), Some(m), Some(y), None) =
+        (parts.next(), parts.next(), parts.next(), parts.next())
     else {
         return err(format!("bad date '{s}'"));
     };
-    let day: u32 = d.parse().map_err(|_| ParseError(format!("bad day in '{s}'")))?;
+    let day: u32 = d
+        .parse()
+        .map_err(|_| ParseError(format!("bad day in '{s}'")))?;
     let month = MONTHS
         .iter()
         .position(|name| name.eq_ignore_ascii_case(m))
         .ok_or_else(|| ParseError(format!("bad month in '{s}'")))? as u32
         + 1;
-    let year: i32 = y.parse().map_err(|_| ParseError(format!("bad year in '{s}'")))?;
+    let year: i32 = y
+        .parse()
+        .map_err(|_| ParseError(format!("bad year in '{s}'")))?;
     Ok((year, month, day))
 }
 
@@ -158,7 +165,9 @@ pub fn parse_monthly_xml(bytes: &[u8]) -> Result<((i32, u32), Vec<ParsedRate>), 
                 _ => field = None,
             },
             Ok(Event::Text(t)) => {
-                let value = t.unescape().map_err(|e| ParseError(format!("bad text: {e}")))?;
+                let value = t
+                    .unescape()
+                    .map_err(|e| ParseError(format!("bad text: {e}")))?;
                 match field {
                     Some("code") => code = Some(parse_code(&value)?),
                     Some("rate") => rate = Some(parse_rate_decimal(&value)?),
@@ -170,7 +179,11 @@ pub fn parse_monthly_xml(bytes: &[u8]) -> Result<((i32, u32), Vec<ParsedRate>), 
                     let (Some(c), Some((mantissa, scale))) = (code.take(), rate.take()) else {
                         return err("exchangeRate record missing currencyCode or rateNew");
                     };
-                    rates.push(ParsedRate { code: c, mantissa, scale });
+                    rates.push(ParsedRate {
+                        code: c,
+                        mantissa,
+                        scale,
+                    });
                 }
                 field = None;
             }
@@ -189,16 +202,19 @@ pub fn parse_monthly_xml(bytes: &[u8]) -> Result<((i32, u32), Vec<ParsedRate>), 
 pub fn parse_rates_csv(bytes: &[u8]) -> Result<Vec<ParsedRate>, ParseError> {
     let text = decode_utf8_lossy_bom(bytes);
     let mut reader = csv::Reader::from_reader(text.as_bytes());
-    let headers = reader.headers().map_err(|e| ParseError(format!("bad CSV: {e}")))?;
+    let headers = reader
+        .headers()
+        .map_err(|e| ParseError(format!("bad CSV: {e}")))?;
 
     let col = |needle: &str| {
         headers
             .iter()
             .position(|h| h.trim().eq_ignore_ascii_case(needle) || h.trim().starts_with(needle))
     };
-    let code_col = col("Currency Code").ok_or_else(|| ParseError("no 'Currency Code' column".into()))?;
-    let rate_col =
-        col("Currency Units per").ok_or_else(|| ParseError("no 'Currency Units per £1' column".into()))?;
+    let code_col =
+        col("Currency Code").ok_or_else(|| ParseError("no 'Currency Code' column".into()))?;
+    let rate_col = col("Currency Units per")
+        .ok_or_else(|| ParseError("no 'Currency Units per £1' column".into()))?;
 
     let mut rates = Vec::new();
     for record in reader.records() {
@@ -209,7 +225,11 @@ pub fn parse_rates_csv(bytes: &[u8]) -> Result<Vec<ParsedRate>, ParseError> {
             continue; // blank/trailing line
         }
         let (mantissa, scale) = parse_rate_decimal(rate)?;
-        rates.push(ParsedRate { code: parse_code(code)?, mantissa, scale });
+        rates.push(ParsedRate {
+            code: parse_code(code)?,
+            mantissa,
+            scale,
+        });
     }
     if rates.is_empty() {
         return err("CSV has no rate rows");
@@ -222,8 +242,14 @@ pub fn parse_rates_csv(bytes: &[u8]) -> Result<Vec<ParsedRate>, ParseError> {
 pub fn parse_weekly_csv(bytes: &[u8]) -> Result<Vec<WeeklyRow>, ParseError> {
     let text = decode_utf8_lossy_bom(bytes);
     let mut reader = csv::Reader::from_reader(text.as_bytes());
-    let headers = reader.headers().map_err(|e| ParseError(format!("bad CSV: {e}")))?;
-    let find = |name: &str| headers.iter().position(|h| h.trim().eq_ignore_ascii_case(name));
+    let headers = reader
+        .headers()
+        .map_err(|e| ParseError(format!("bad CSV: {e}")))?;
+    let find = |name: &str| {
+        headers
+            .iter()
+            .position(|h| h.trim().eq_ignore_ascii_case(name))
+    };
     let (Some(date_col), Some(code_col), Some(rate_col)) =
         (find("Date"), find("Currency Code"), find("Rate"))
     else {
@@ -236,7 +262,14 @@ pub fn parse_weekly_csv(bytes: &[u8]) -> Result<Vec<WeeklyRow>, ParseError> {
         let date = parse_iso_date(record.get(date_col).unwrap_or(""))?;
         let code = parse_code(record.get(code_col).unwrap_or(""))?;
         let (mantissa, scale) = parse_rate_decimal(record.get(rate_col).unwrap_or(""))?;
-        rows.push(WeeklyRow { date, rate: ParsedRate { code, mantissa, scale } });
+        rows.push(WeeklyRow {
+            date,
+            rate: ParsedRate {
+                code,
+                mantissa,
+                scale,
+            },
+        });
     }
     if rows.is_empty() {
         return err("weekly CSV has no rows");
@@ -246,13 +279,20 @@ pub fn parse_weekly_csv(bytes: &[u8]) -> Result<Vec<WeeklyRow>, ParseError> {
 
 fn parse_iso_date(s: &str) -> Result<(i32, u32, u32), ParseError> {
     let mut parts = s.trim().split('-');
-    let (Some(y), Some(m), Some(d), None) = (parts.next(), parts.next(), parts.next(), parts.next())
+    let (Some(y), Some(m), Some(d), None) =
+        (parts.next(), parts.next(), parts.next(), parts.next())
     else {
         return err(format!("bad ISO date '{s}'"));
     };
-    let year: i32 = y.parse().map_err(|_| ParseError(format!("bad ISO date '{s}'")))?;
-    let month: u32 = m.parse().map_err(|_| ParseError(format!("bad ISO date '{s}'")))?;
-    let day: u32 = d.parse().map_err(|_| ParseError(format!("bad ISO date '{s}'")))?;
+    let year: i32 = y
+        .parse()
+        .map_err(|_| ParseError(format!("bad ISO date '{s}'")))?;
+    let month: u32 = m
+        .parse()
+        .map_err(|_| ParseError(format!("bad ISO date '{s}'")))?;
+    let day: u32 = d
+        .parse()
+        .map_err(|_| ParseError(format!("bad ISO date '{s}'")))?;
     if !(1..=12).contains(&month) || day == 0 || day > date::days_in_month(year, month) {
         return err(format!("invalid date '{s}'"));
     }
@@ -278,14 +318,20 @@ pub fn dedup_majority(mut rates: Vec<ParsedRate>) -> Result<Vec<ParsedRate>, Par
 
         let mut distinct: Vec<(ParsedRate, usize)> = Vec::new();
         for rate in &group {
-            match distinct.iter_mut().find(|(r, _)| (r.mantissa, r.scale) == (rate.mantissa, rate.scale)) {
+            match distinct
+                .iter_mut()
+                .find(|(r, _)| (r.mantissa, r.scale) == (rate.mantissa, rate.scale))
+            {
                 Some((_, count)) => *count += 1,
                 None => distinct.push((*rate, 1)),
             }
         }
         let best_count = distinct.iter().map(|(_, c)| *c).max().unwrap_or(0);
-        let mut tied: Vec<ParsedRate> =
-            distinct.iter().filter(|(_, c)| *c == best_count).map(|(r, _)| *r).collect();
+        let mut tied: Vec<ParsedRate> = distinct
+            .iter()
+            .filter(|(_, c)| *c == best_count)
+            .map(|(r, _)| *r)
+            .collect();
         tied.sort_unstable_by_key(|r| r.scale);
         let winner = match tied.as_slice() {
             [single] => *single,
@@ -293,11 +339,14 @@ pub fn dedup_majority(mut rates: Vec<ParsedRate>) -> Result<Vec<ParsedRate>, Par
             _ => {
                 let least_precise = tied[0];
                 let consistent = tied.iter().all(|r| {
-                    rounded_to(r.mantissa, r.scale, least_precise.scale) == Some(least_precise.mantissa)
+                    rounded_to(r.mantissa, r.scale, least_precise.scale)
+                        == Some(least_precise.mantissa)
                 });
                 if !consistent {
                     let code_str = String::from_utf8_lossy(&code).into_owned();
-                    return err(format!("conflicting duplicate rates for '{code_str}' with no majority"));
+                    return err(format!(
+                        "conflicting duplicate rates for '{code_str}' with no majority"
+                    ));
                 }
                 tied[tied.len() - 1] // most precise of the agreeing values
             }
@@ -327,7 +376,11 @@ mod tests {
     use super::*;
 
     fn rate(code: &[u8; 3], mantissa: u64, scale: u8) -> ParsedRate {
-        ParsedRate { code: *code, mantissa, scale }
+        ParsedRate {
+            code: *code,
+            mantissa,
+            scale,
+        }
     }
 
     #[test]
@@ -335,7 +388,10 @@ mod tests {
         assert_eq!(parse_rate_decimal("4.9226").unwrap(), (49226, 4));
         assert_eq!(parse_rate_decimal("13").unwrap(), (13, 0));
         assert_eq!(parse_rate_decimal(" 0.5 ").unwrap(), (5, 1));
-        assert_eq!(parse_rate_decimal("6413696.5388").unwrap(), (64136965388, 4));
+        assert_eq!(
+            parse_rate_decimal("6413696.5388").unwrap(),
+            (64136965388, 4)
+        );
         assert!(parse_rate_decimal("0").is_err());
         assert!(parse_rate_decimal("0.000").is_err());
         assert!(parse_rate_decimal("-1.5").is_err());
@@ -346,9 +402,18 @@ mod tests {
 
     #[test]
     fn month_period_validation() {
-        assert_eq!(parse_month_period("01/Jul/2026 to 31/Jul/2026").unwrap(), (2026, 7));
-        assert_eq!(parse_month_period("01/Feb/2014 to 28/Feb/2014").unwrap(), (2014, 2));
-        assert_eq!(parse_month_period("01/Feb/2016 to 29/Feb/2016").unwrap(), (2016, 2));
+        assert_eq!(
+            parse_month_period("01/Jul/2026 to 31/Jul/2026").unwrap(),
+            (2026, 7)
+        );
+        assert_eq!(
+            parse_month_period("01/Feb/2014 to 28/Feb/2014").unwrap(),
+            (2014, 2)
+        );
+        assert_eq!(
+            parse_month_period("01/Feb/2016 to 29/Feb/2016").unwrap(),
+            (2016, 2)
+        );
         assert!(parse_month_period("02/Aug/2025 to 31/Aug/2025").is_err()); // not day 1
         assert!(parse_month_period("01/Aug/2025 to 30/Aug/2025").is_err()); // wrong end
         assert!(parse_month_period("01/Feb/2015 to 29/Feb/2015").is_err()); // not a leap year
@@ -421,7 +486,8 @@ mod tests {
     #[test]
     fn dedup_tie_prefers_precision_when_consistent() {
         // The real USD 2012-03 case: USA 1.5958134 vs Liberia 1.595813.
-        let out = dedup_majority(vec![rate(b"USD", 1595813, 6), rate(b"USD", 15958134, 7)]).unwrap();
+        let out =
+            dedup_majority(vec![rate(b"USD", 1595813, 6), rate(b"USD", 15958134, 7)]).unwrap();
         assert_eq!(out, vec![rate(b"USD", 15958134, 7)]);
     }
 

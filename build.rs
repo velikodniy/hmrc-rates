@@ -48,7 +48,10 @@ fn sorted_files(dir: &Path, extension: &str) -> Vec<PathBuf> {
 
 /// "YYYY-MM" from a data file name.
 fn file_period(path: &Path) -> (i32, u32) {
-    let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or_default();
+    let stem = path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or_default();
     let parse = || -> Option<(i32, u32)> {
         let (y, m) = stem.split_once('-')?;
         let year: i32 = y.parse().ok()?;
@@ -63,8 +66,8 @@ fn load_monthly(dir: &Path) -> SeriesData {
     for path in sorted_files(dir, "xml") {
         let (year, month) = file_period(&path);
         let bytes = std::fs::read(&path).expect("unreadable file");
-        let ((py, pm), rates) = parse::parse_monthly_xml(&bytes)
-            .unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+        let ((py, pm), rates) =
+            parse::parse_monthly_xml(&bytes).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
         assert_eq!(
             (py, pm),
             (year, month),
@@ -72,7 +75,11 @@ fn load_monthly(dir: &Path) -> SeriesData {
             path.display()
         );
         let rates = dedup_majority(rates).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
-        assert!(rates.len() >= 100, "{}: implausibly few rates", path.display());
+        assert!(
+            rates.len() >= 100,
+            "{}: implausibly few rates",
+            path.display()
+        );
         series.push((year * 12 + month as i32 - 1, rates));
     }
     assert!(!series.is_empty(), "data/monthly is empty");
@@ -127,7 +134,10 @@ fn load_weekly(dir: &Path) -> Vec<(i32, i32, Vec<ParsedRate>)> {
             (2014..=2016).contains(&y),
             "weekly amendment date {y}-{m:02}-{d:02} outside the 2014-2016 series"
         );
-        by_day.entry(parse::date::days_from_civil(y, m, d)).or_default().push(row.rate);
+        by_day
+            .entry(parse::date::days_from_civil(y, m, d))
+            .or_default()
+            .push(row.rate);
     }
 
     let days: Vec<i32> = by_day.keys().copied().collect();
@@ -170,7 +180,11 @@ fn emit_series(code: &mut String, name: &str, series: &SeriesData) {
     let mut end = 0u32;
     for (key, rates) in series {
         end += rates.len() as u32;
-        writeln!(code, "    crate::store::PeriodIdx {{ key: {key}, end: {end} }},").expect("write");
+        writeln!(
+            code,
+            "    crate::store::PeriodIdx {{ key: {key}, end: {end} }},"
+        )
+        .expect("write");
     }
     writeln!(code, "];").expect("write");
 

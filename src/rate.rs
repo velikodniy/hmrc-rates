@@ -26,7 +26,11 @@ pub struct Rate {
 
 impl Rate {
     pub(crate) fn new(units_per_gbp: Decimal, currency: Currency, period: Period) -> Rate {
-        Rate { units_per_gbp, currency, period }
+        Rate {
+            units_per_gbp,
+            currency,
+            period,
+        }
     }
 
     /// The canonical HMRC figure: how many currency units £1 buys.

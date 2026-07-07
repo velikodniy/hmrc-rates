@@ -3,8 +3,8 @@
 #![allow(clippy::unwrap_used)]
 
 use chrono::Utc;
-use httpmock::prelude::*;
 use hmrc_rates::{Month, Rates, Updater};
+use httpmock::prelude::*;
 use rust_decimal_macros::dec;
 
 /// The two months the updater always probes: the current and the next one.
@@ -15,8 +15,23 @@ fn probed_months() -> (Month, Month) {
 
 fn monthly_xml(month: Month, usd_rate: &str) -> String {
     let (y, m) = (month.year(), month.month());
-    let days = [31, 28 + is_leap(y) as u32, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m as usize - 1];
-    let names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    let days = [
+        31,
+        28 + is_leap(y) as u32,
+        31,
+        30,
+        31,
+        30,
+        31,
+        31,
+        30,
+        31,
+        30,
+        31,
+    ][m as usize - 1];
+    let names = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ];
     format!(
         r#"<?xml version="1.0"?>
 <exchangeRateMonthList Period="01/{name}/{y} to {days}/{name}/{y}">
@@ -108,7 +123,8 @@ fn stale_amendable_cache_is_refetched_and_replaced() {
     std::fs::write(&path, monthly_xml(next, "7.0001")).unwrap();
     let old = std::time::SystemTime::now() - std::time::Duration::from_secs(25 * 60 * 60);
     let file = std::fs::File::options().write(true).open(&path).unwrap();
-    file.set_times(std::fs::FileTimes::new().set_modified(old)).unwrap();
+    file.set_times(std::fs::FileTimes::new().set_modified(old))
+        .unwrap();
 
     // ...and an amended upstream file.
     let amended = server.mock(|when, then| {
@@ -203,7 +219,11 @@ fn cached_works_fully_offline() {
         dec!(5.5555)
     );
     // Bundled data still present underneath.
-    assert!(rates.monthly_rate("USD", Month::new(2025, 8).unwrap()).is_ok());
+    assert!(
+        rates
+            .monthly_rate("USD", Month::new(2025, 8).unwrap())
+            .is_ok()
+    );
 }
 
 /// Live smoke test against the real endpoint; run manually or from the cron

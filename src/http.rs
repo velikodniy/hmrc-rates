@@ -9,7 +9,8 @@ use crate::rates::Rates;
 use crate::store::Entry;
 use crate::types::{Month, RateType, YearEnd};
 
-const DEFAULT_BASE_URL: &str = "https://www.trade-tariff.service.gov.uk/api/v2/exchange_rates/files";
+const DEFAULT_BASE_URL: &str =
+    "https://www.trade-tariff.service.gov.uk/api/v2/exchange_rates/files";
 const USER_AGENT: &str = concat!(
     "hmrc-rates/",
     env!("CARGO_PKG_VERSION"),
@@ -136,13 +137,14 @@ impl Updater {
                     break; // not due yet
                 }
                 let name = format!("{prefix}_csv_{}-{:02}.csv", period.year(), end.month());
-                let days_past_end = (today.num_days_from_ce()
-                    - end_of_month(period).num_days_from_ce()) as i64;
+                let days_past_end =
+                    (today.num_days_from_ce() - end_of_month(period).num_days_from_ce()) as i64;
                 let amendable = (0..=60).contains(&days_past_end);
                 let is_new = period != last;
                 if is_new || amendable {
-                    let entries =
-                        self.obtain(&name, amendable, |bytes| dedup(parse::parse_rates_csv(bytes)?))?;
+                    let entries = self.obtain(&name, amendable, |bytes| {
+                        dedup(parse::parse_rates_csv(bytes)?)
+                    })?;
                     if let Some(entries) = entries {
                         rates.set_period(rate_type, period.key(), entries);
                     }
@@ -199,19 +201,28 @@ impl Updater {
 
     /// Applies every parseable cache file; failures are silently skipped.
     fn apply_cache(&self, rates: &mut Rates) {
-        let Some(dir) = self.cache_dir.as_deref() else { return };
-        let Ok(entries) = fs::read_dir(dir) else { return };
+        let Some(dir) = self.cache_dir.as_deref() else {
+            return;
+        };
+        let Ok(entries) = fs::read_dir(dir) else {
+            return;
+        };
         let mut files: Vec<PathBuf> = entries.flatten().map(|e| e.path()).collect();
         files.sort();
         for path in files {
-            let Some(name) = path.file_name().and_then(|n| n.to_str()) else { continue };
+            let Some(name) = path.file_name().and_then(|n| n.to_str()) else {
+                continue;
+            };
             let Ok(bytes) = fs::read(&path) else { continue };
             let _ = self.apply_file(rates, name, &bytes);
         }
     }
 
     fn apply_file(&self, rates: &mut Rates, name: &str, bytes: &[u8]) -> Result<(), ()> {
-        if let Some(rest) = name.strip_prefix("monthly_xml_").and_then(|r| r.strip_suffix(".xml")) {
+        if let Some(rest) = name
+            .strip_prefix("monthly_xml_")
+            .and_then(|r| r.strip_suffix(".xml"))
+        {
             let key = parse_period_name(rest).ok_or(())?;
             let ((y, m), raw) = parse::parse_monthly_xml(bytes).map_err(|_| ())?;
             if Month::new(y, m).map(Month::key) != Some(key) {
@@ -221,8 +232,14 @@ impl Updater {
             rates.set_period(RateType::Monthly, key, entries);
             return Ok(());
         }
-        for (rate_type, prefix) in [(RateType::Spot, "spot_csv_"), (RateType::Average, "average_csv_")] {
-            if let Some(rest) = name.strip_prefix(prefix).and_then(|r| r.strip_suffix(".csv")) {
+        for (rate_type, prefix) in [
+            (RateType::Spot, "spot_csv_"),
+            (RateType::Average, "average_csv_"),
+        ] {
+            if let Some(rest) = name
+                .strip_prefix(prefix)
+                .and_then(|r| r.strip_suffix(".csv"))
+            {
                 let key = parse_period_name(rest).ok_or(())?;
                 let month = Month::from_key(key);
                 let year_end = match month.month() {
@@ -241,7 +258,9 @@ impl Updater {
 
     /// Atomic best-effort cache write; failure only costs a refetch next run.
     fn store(&self, name: &str, bytes: &[u8]) {
-        let Some(path) = self.cache_path(name) else { return };
+        let Some(path) = self.cache_path(name) else {
+            return;
+        };
         let Some(dir) = path.parent() else { return };
         if fs::create_dir_all(dir).is_err() {
             return;
@@ -273,7 +292,11 @@ fn default_cache_dir() -> Option<PathBuf> {
 fn dedup(raw: Vec<ParsedRate>) -> Result<Vec<Entry>, parse::ParseError> {
     Ok(parse::dedup_majority(raw)?
         .into_iter()
-        .map(|r| Entry { mantissa: r.mantissa, code: r.code, scale: r.scale })
+        .map(|r| Entry {
+            mantissa: r.mantissa,
+            code: r.code,
+            scale: r.scale,
+        })
         .collect())
 }
 
@@ -294,6 +317,5 @@ fn next_year_end(period: YearEnd) -> YearEnd {
 fn end_of_month(period: YearEnd) -> chrono::NaiveDate {
     let month = period.end_month();
     let last_day = crate::date::days_in_month(period.year(), month.month());
-    chrono::NaiveDate::from_ymd_opt(period.year(), month.month(), last_day)
-        .unwrap_or_default()
+    chrono::NaiveDate::from_ymd_opt(period.year(), month.month(), last_day).unwrap_or_default()
 }

@@ -40,7 +40,10 @@ pub(crate) struct StaticSeries {
 }
 
 #[cfg(test)]
-pub(crate) const EMPTY_SERIES: StaticSeries = StaticSeries { index: &[], arena: &[] };
+pub(crate) const EMPTY_SERIES: StaticSeries = StaticSeries {
+    index: &[],
+    arena: &[],
+};
 
 #[derive(Copy, Clone)]
 pub(crate) struct StaticWeeks {
@@ -49,7 +52,10 @@ pub(crate) struct StaticWeeks {
 }
 
 #[cfg(test)]
-pub(crate) const EMPTY_WEEKS: StaticWeeks = StaticWeeks { index: &[], arena: &[] };
+pub(crate) const EMPTY_WEEKS: StaticWeeks = StaticWeeks {
+    index: &[],
+    arena: &[],
+};
 
 /// A key-addressed series: bundled statics plus an overlay of fetched periods.
 /// Overlay wins; a fetched period replaces the whole bundled table.
@@ -61,7 +67,10 @@ pub(crate) struct Series {
 
 impl Series {
     pub fn new(statics: StaticSeries) -> Series {
-        Series { statics, overlay: Vec::new() }
+        Series {
+            statics,
+            overlay: Vec::new(),
+        }
     }
 
     /// Inserts or replaces a fetched period (entries must be sorted by code).
@@ -77,12 +86,20 @@ impl Series {
         if let Ok(i) = self.overlay.binary_search_by_key(&key, |(k, _)| *k) {
             return Some(&self.overlay[i].1);
         }
-        let i = self.statics.index.binary_search_by_key(&key, |p| p.key).ok()?;
+        let i = self
+            .statics
+            .index
+            .binary_search_by_key(&key, |p| p.key)
+            .ok()?;
         Some(self.slice(i))
     }
 
     fn slice(&self, i: usize) -> &'static [Entry] {
-        let start = if i == 0 { 0 } else { self.statics.index[i - 1].end as usize };
+        let start = if i == 0 {
+            0
+        } else {
+            self.statics.index[i - 1].end as usize
+        };
         let end = self.statics.index[i].end as usize;
         &self.statics.arena[start..end]
     }
@@ -119,7 +136,11 @@ impl Series {
     /// Every distinct code in the series, ascending.
     pub fn codes(&self) -> Vec<[u8; 3]> {
         let mut codes: Vec<[u8; 3]> = self.statics.arena.iter().map(|e| e.code).collect();
-        codes.extend(self.overlay.iter().flat_map(|(_, t)| t.iter().map(|e| e.code)));
+        codes.extend(
+            self.overlay
+                .iter()
+                .flat_map(|(_, t)| t.iter().map(|e| e.code)),
+        );
         codes.sort_unstable();
         codes.dedup();
         codes
@@ -176,14 +197,26 @@ mod tests {
     use alloc::vec;
 
     fn entry(code: &[u8; 3], mantissa: u64) -> Entry {
-        Entry { mantissa, code: *code, scale: 4 }
+        Entry {
+            mantissa,
+            code: *code,
+            scale: 4,
+        }
     }
 
     #[test]
     fn entry_decimal_conversion() {
-        let e = Entry { mantissa: 13541, code: *b"USD", scale: 4 };
+        let e = Entry {
+            mantissa: 13541,
+            code: *b"USD",
+            scale: 4,
+        };
         assert_eq!(e.decimal().to_string(), "1.3541");
-        let max = Entry { mantissa: 64136965388, code: *b"VES", scale: 4 };
+        let max = Entry {
+            mantissa: 64136965388,
+            code: *b"VES",
+            scale: 4,
+        };
         assert_eq!(max.decimal().to_string(), "6413696.5388");
     }
 
@@ -197,7 +230,10 @@ mod tests {
         series.set(1, vec![entry(b"USD", 13000)]);
         assert_eq!(series.keys(), vec![1, 2]);
         assert_eq!(series.first_last(), Some((1, 2)));
-        assert_eq!(lookup(series.table(2).unwrap(), *b"USD").unwrap().mantissa, 13541);
+        assert_eq!(
+            lookup(series.table(2).unwrap(), *b"USD").unwrap().mantissa,
+            13541
+        );
 
         // Whole-period replacement.
         series.set(2, vec![entry(b"USD", 14000)]);
@@ -211,14 +247,33 @@ mod tests {
     fn weeks_containment_boundaries() {
         // Two adjacent weeks over a static arena.
         static ARENA: [Entry; 2] = [
-            Entry { mantissa: 35418, code: *b"TRY", scale: 4 },
-            Entry { mantissa: 109760, code: *b"ARS", scale: 4 },
+            Entry {
+                mantissa: 35418,
+                code: *b"TRY",
+                scale: 4,
+            },
+            Entry {
+                mantissa: 109760,
+                code: *b"ARS",
+                scale: 4,
+            },
         ];
         static INDEX: [WeekIdx; 2] = [
-            WeekIdx { start_day: 100, end_day: 106, end: 1 },
-            WeekIdx { start_day: 107, end_day: 113, end: 2 },
+            WeekIdx {
+                start_day: 100,
+                end_day: 106,
+                end: 1,
+            },
+            WeekIdx {
+                start_day: 107,
+                end_day: 113,
+                end: 2,
+            },
         ];
-        let weeks = Weeks::new(StaticWeeks { index: &INDEX, arena: &ARENA });
+        let weeks = Weeks::new(StaticWeeks {
+            index: &INDEX,
+            arena: &ARENA,
+        });
 
         assert!(weeks.containing(99).is_none());
         assert_eq!(weeks.containing(100).unwrap().1[0].code, *b"TRY");

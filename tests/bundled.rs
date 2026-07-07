@@ -25,7 +25,9 @@ fn bundled_monthly_coverage_is_contiguous_from_2014_02() {
 #[test]
 fn golden_usd_and_eur_august_2025() {
     let rates = Rates::new();
-    let usd = rates.monthly_rate("USD", Month::new(2025, 8).unwrap()).unwrap();
+    let usd = rates
+        .monthly_rate("USD", Month::new(2025, 8).unwrap())
+        .unwrap();
     assert_eq!(usd.units_per_gbp(), dec!(1.3541));
     // 0.1 behavior preserved modulo rounding: £73.85 for $100 after round_dp(2).
     assert_eq!(usd.to_gbp(dec!(100.00)).round_dp(2), dec!(73.85));
@@ -38,7 +40,9 @@ fn golden_usd_and_eur_august_2025() {
 #[test]
 fn conversions_are_exact_not_rounded() {
     let rates = Rates::new();
-    let rate = rates.monthly_rate("USD", Month::new(2025, 8).unwrap()).unwrap();
+    let rate = rates
+        .monthly_rate("USD", Month::new(2025, 8).unwrap())
+        .unwrap();
     let gbp = rate.to_gbp(dec!(100));
     assert_ne!(gbp, gbp.round_dp(2)); // 100/1.3541 is not a 2dp number
     assert_eq!(rate.from_gbp(gbp).round_dp(10), dec!(100));
@@ -48,9 +52,17 @@ fn conversions_are_exact_not_rounded() {
 fn strict_monthly_lookup_errors_outside_coverage() {
     let rates = Rates::new();
     for (y, m) in [(2014, 1), (2013, 12), (2035, 1)] {
-        let err = rates.monthly_rate("USD", Month::new(y, m).unwrap()).unwrap_err();
+        let err = rates
+            .monthly_rate("USD", Month::new(y, m).unwrap())
+            .unwrap_err();
         assert!(
-            matches!(err, LookupError::PeriodNotAvailable { table: RateType::Monthly, .. }),
+            matches!(
+                err,
+                LookupError::PeriodNotAvailable {
+                    table: RateType::Monthly,
+                    ..
+                }
+            ),
             "{y}-{m}: {err}"
         );
     }
@@ -60,7 +72,9 @@ fn strict_monthly_lookup_errors_outside_coverage() {
 fn gbp_identity_everywhere() {
     let rates = Rates::new();
     // Any month, including unpublished ones.
-    let rate = rates.monthly_rate("gbp", Month::new(2035, 1).unwrap()).unwrap();
+    let rate = rates
+        .monthly_rate("gbp", Month::new(2035, 1).unwrap())
+        .unwrap();
     assert_eq!(rate.units_per_gbp(), Decimal::ONE);
     assert_eq!(rate.to_gbp(dec!(42)), dec!(42));
     // Through tables too.
@@ -93,15 +107,46 @@ fn unknown_currency_vs_not_in_period() {
     let rates = Rates::new();
     // Garbage input and never-published codes fold into UnknownCurrency.
     for code in ["XXX", "", "US DOLLARS", "usd extra"] {
-        let err = rates.monthly_rate(code, Month::new(2025, 8).unwrap()).unwrap_err();
-        assert!(matches!(err, LookupError::UnknownCurrency { .. }), "{code:?}: {err}");
+        let err = rates
+            .monthly_rate(code, Month::new(2025, 8).unwrap())
+            .unwrap_err();
+        assert!(
+            matches!(err, LookupError::UnknownCurrency { .. }),
+            "{code:?}: {err}"
+        );
     }
     // GHS appears in the full-list Dec 2015 spot table but not in Dec 2024.
-    let err = rates.spot(YearEnd::december(2024)).unwrap().rate("GHS").unwrap_err();
-    assert!(matches!(err, LookupError::NotInPeriod { table: RateType::Spot, .. }), "{err}");
+    let err = rates
+        .spot(YearEnd::december(2024))
+        .unwrap()
+        .rate("GHS")
+        .unwrap_err();
+    assert!(
+        matches!(
+            err,
+            LookupError::NotInPeriod {
+                table: RateType::Spot,
+                ..
+            }
+        ),
+        "{err}"
+    );
     // KMF never appears in any spot table.
-    let err = rates.spot(YearEnd::december(2024)).unwrap().rate("KMF").unwrap_err();
-    assert!(matches!(err, LookupError::UnknownCurrency { table: RateType::Spot, .. }), "{err}");
+    let err = rates
+        .spot(YearEnd::december(2024))
+        .unwrap()
+        .rate("KMF")
+        .unwrap_err();
+    assert!(
+        matches!(
+            err,
+            LookupError::UnknownCurrency {
+                table: RateType::Spot,
+                ..
+            }
+        ),
+        "{err}"
+    );
 }
 
 #[test]
@@ -115,18 +160,36 @@ fn spot_and_average_periods() {
     assert_eq!(averages.first().copied(), Some(YearEnd::december(2010)));
 
     // USA row wins over USD-pegged countries in the messy Dec 2015 file.
-    let usd = rates.spot(YearEnd::december(2015)).unwrap().rate("USD").unwrap();
+    let usd = rates
+        .spot(YearEnd::december(2015))
+        .unwrap()
+        .rate("USD")
+        .unwrap();
     assert_eq!(usd.units_per_gbp(), dec!(1.4833));
 
-    let eur = rates.average(YearEnd::march(2026)).unwrap().rate("EUR").unwrap();
+    let eur = rates
+        .average(YearEnd::march(2026))
+        .unwrap()
+        .rate("EUR")
+        .unwrap();
     assert!(eur.units_per_gbp() > Decimal::ONE);
 
     // Pre-euro history keeps its historical codes.
-    let eek = rates.average(YearEnd::december(2010)).unwrap().rate("EEK").unwrap();
+    let eek = rates
+        .average(YearEnd::december(2010))
+        .unwrap()
+        .rate("EEK")
+        .unwrap();
     assert!(eek.units_per_gbp() > dec!(15));
 
     let err = rates.spot(YearEnd::march(2010)).unwrap_err();
-    assert!(matches!(err, LookupError::PeriodNotAvailable { table: RateType::Spot, .. }));
+    assert!(matches!(
+        err,
+        LookupError::PeriodNotAvailable {
+            table: RateType::Spot,
+            ..
+        }
+    ));
 }
 
 #[test]
@@ -147,7 +210,10 @@ fn weekly_amendments_by_containing_date() {
     // Outside the series' life.
     assert!(matches!(
         rates.weekly(date(2017, 1, 1)),
-        Err(LookupError::PeriodNotAvailable { table: RateType::Weekly, .. })
+        Err(LookupError::PeriodNotAvailable {
+            table: RateType::Weekly,
+            ..
+        })
     ));
     assert!(rates.weekly(date(2013, 12, 31)).is_err());
 
@@ -176,11 +242,15 @@ fn discovery_iterators() {
 #[test]
 fn errors_render_helpful_messages() {
     let rates = Rates::new();
-    let err = rates.monthly_rate("USD", Month::new(2013, 1).unwrap()).unwrap_err();
+    let err = rates
+        .monthly_rate("USD", Month::new(2013, 1).unwrap())
+        .unwrap_err();
     let message = err.to_string();
     assert!(message.contains("2013-01"), "{message}");
     assert!(message.contains("available 2014-02"), "{message}");
 
-    let err = rates.monthly_rate("XXX", Month::new(2025, 8).unwrap()).unwrap_err();
+    let err = rates
+        .monthly_rate("XXX", Month::new(2025, 8).unwrap())
+        .unwrap_err();
     assert!(err.to_string().contains("'XXX'"));
 }

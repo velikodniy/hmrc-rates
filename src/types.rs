@@ -79,12 +79,18 @@ pub struct YearEnd {
 impl YearEnd {
     /// The year ending 31 March of `year`.
     pub fn march(year: i32) -> YearEnd {
-        YearEnd { year, december: false }
+        YearEnd {
+            year,
+            december: false,
+        }
     }
 
     /// The year ending 31 December of `year`.
     pub fn december(year: i32) -> YearEnd {
-        YearEnd { year, december: true }
+        YearEnd {
+            year,
+            december: true,
+        }
     }
 
     pub fn year(self) -> i32 {
@@ -106,7 +112,10 @@ impl YearEnd {
     }
 
     pub(crate) fn from_key(key: i32) -> YearEnd {
-        YearEnd { year: key.div_euclid(2), december: key.rem_euclid(2) == 1 }
+        YearEnd {
+            year: key.div_euclid(2),
+            december: key.rem_euclid(2) == 1,
+        }
     }
 }
 
@@ -197,7 +206,10 @@ pub enum Period {
     Month(Month),
     YearEnd(YearEnd),
     /// An inclusive weekly-amendment validity range.
-    Week { start: NaiveDate, end: NaiveDate },
+    Week {
+        start: NaiveDate,
+        end: NaiveDate,
+    },
 }
 
 impl fmt::Display for Period {
@@ -232,7 +244,8 @@ mod serde_impls {
                 let (y, m) = s.split_once('-')?;
                 Month::new(y.parse().ok()?, m.parse().ok()?)
             };
-            parse().ok_or_else(|| D::Error::custom(format!("invalid month '{s}', expected YYYY-MM")))
+            parse()
+                .ok_or_else(|| D::Error::custom(format!("invalid month '{s}', expected YYYY-MM")))
         }
     }
 
@@ -283,7 +296,10 @@ mod tests {
         assert_eq!((m.year(), m.month()), (2025, 1));
         assert_eq!(m.prev(), Month::new(2024, 12).unwrap());
         assert_eq!(m.next(), Month::new(2025, 2).unwrap());
-        assert_eq!(Month::new(2025, 12).unwrap().next(), Month::new(2026, 1).unwrap());
+        assert_eq!(
+            Month::new(2025, 12).unwrap().next(),
+            Month::new(2026, 1).unwrap()
+        );
         assert!(Month::new(2025, 0).is_none());
         assert!(Month::new(2025, 13).is_none());
         assert_eq!(m.to_string(), "2025-01");
@@ -299,9 +315,18 @@ mod tests {
     fn year_end_ordering_and_display() {
         assert!(YearEnd::march(2025) < YearEnd::december(2025));
         assert!(YearEnd::december(2024) < YearEnd::march(2025));
-        assert_eq!(YearEnd::march(2026).end_month(), Month::new(2026, 3).unwrap());
-        assert_eq!(YearEnd::december(2025).to_string(), "year ending 2025-12-31");
-        assert_eq!(YearEnd::from_key(YearEnd::march(2026).key()), YearEnd::march(2026));
+        assert_eq!(
+            YearEnd::march(2026).end_month(),
+            Month::new(2026, 3).unwrap()
+        );
+        assert_eq!(
+            YearEnd::december(2025).to_string(),
+            "year ending 2025-12-31"
+        );
+        assert_eq!(
+            YearEnd::from_key(YearEnd::march(2026).key()),
+            YearEnd::march(2026)
+        );
     }
 
     #[test]

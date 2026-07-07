@@ -25,7 +25,10 @@ fn compact_string_forms() {
     assert_eq!(serde_json::to_string(&Currency::GBP).unwrap(), r#""GBP""#);
     assert_eq!(roundtrip(&Currency::GBP), Currency::GBP);
 
-    assert_eq!(serde_json::to_string(&RateType::Monthly).unwrap(), r#""monthly""#);
+    assert_eq!(
+        serde_json::to_string(&RateType::Monthly).unwrap(),
+        r#""monthly""#
+    );
     assert_eq!(roundtrip(&RateType::Weekly), RateType::Weekly);
 }
 
@@ -40,13 +43,18 @@ fn invalid_strings_are_rejected() {
 #[test]
 fn period_and_rate_roundtrip() {
     let rates = Rates::new();
-    let rate = rates.monthly_rate("USD", Month::new(2025, 8).unwrap()).unwrap();
+    let rate = rates
+        .monthly_rate("USD", Month::new(2025, 8).unwrap())
+        .unwrap();
     let back: Rate = roundtrip(&rate);
     assert_eq!(back, rate);
     assert_eq!(back.units_per_gbp(), rate.units_per_gbp());
 
     let period = Period::Month(Month::new(2025, 8).unwrap());
-    assert_eq!(serde_json::to_string(&period).unwrap(), r#"{"month":"2025-08"}"#);
+    assert_eq!(
+        serde_json::to_string(&period).unwrap(),
+        r#"{"month":"2025-08"}"#
+    );
     assert_eq!(roundtrip(&period), period);
 
     let week = rates.weeks().next().unwrap();
