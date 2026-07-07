@@ -1,0 +1,42 @@
+# Daily check for new HMRC rate files; commits, bumps the patch version and
+# tags — the Publish workflow then releases to crates.io on the tag push.
+# HMRC publishes monthly rates on the penultimate Thursday of each month.
+name: Update rates
+on:
+  schedule:
+    - cron: "0 10 * * *"
+  workflow_dispatch:
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download new rates
+        id: download
+        run: python3 scripts/update_rates.py --verbose >> "$GITHUB_OUTPUT"
+      - name: Run tests against new data
+        if: steps.download.outputs.has-new == 'true'
+        run: |
+          cargo test --all-features
+          cargo test --features http -- --ignored live_endpoint_smoke
+      - name: Bump version, commit and tag
+        if: steps.download.outputs.has-new == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          old=$(grep -m1 '^version' Cargo.toml | cut -d'"' -f2)
+          new=$(echo "$old" | awk -F. '{printf "%d.%d.%d", $1, $2, $3 + 1}')
+          sed -i "0,/^version = \"$old\"/s//version = \"$new\"/" Cargo.toml
+          cargo update --workspace
+          git add data Cargo.toml Cargo.lock
+          git commit -m "chore: update rates and bump version to $new" \
+            -m "${{ steps.download.outputs.release-body }}"
+          git tag -a "v$new" -m "v$new" -m "${{ steps.download.outputs.release-body }}"
+          git push origin main
+          git push origin "v$new"

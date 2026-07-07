@@ -7,11 +7,31 @@ on:
 env:
   CARGO_TERM_COLOR: always
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build
-        run: cargo build --verbose
-      - name: Run tests
-        run: cargo test --verbose
+      - uses: Swatinem/rust-cache@v2
+      - name: Format
+        run: cargo fmt --check
+      - name: Clippy
+        run: cargo clippy --all-features --all-targets -- -D warnings
+      - name: Test (default features)
+        run: cargo test
+      - name: Test (all features)
+        run: cargo test --all-features
+      - name: Check (no default features)
+        run: cargo check --no-default-features
+      - name: Docs
+        run: cargo doc --all-features --no-deps
+        env:
+          RUSTDOCFLAGS: -D warnings
+  wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+      - name: Add wasm target
+        run: rustup target add wasm32-unknown-unknown
+      - name: Check no_std wasm build
+        run: cargo check --target wasm32-unknown-unknown --no-default-features --features bundled
