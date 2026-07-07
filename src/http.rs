@@ -1,0 +1,299 @@
+use std::fs;
+use std::path::PathBuf;
+use std::time::{Duration, SystemTime};
+
+use chrono::Datelike;
+
+use crate::parse::{self, ParsedRate};
+use crate::rates::Rates;
+use crate::store::Entry;
+use crate::types::{Month, RateType, YearEnd};
+
+const DEFAULT_BASE_URL: &str = "https://www.trade-tariff.service.gov.uk/api/v2/exchange_rates/files";
+const USER_AGENT: &str = concat!(
+    "hmrc-rates/",
+    env!("CARGO_PKG_VERSION"),
+    " (+https://github.com/velikodniy/hmrc-rates)"
+);
+const CACHE_TTL: Duration = Duration::from_secs(24 * 60 * 60);
+
+/// Why fetching fresh rates failed.
+#[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
+pub enum FetchError {
+    #[error("HTTP request to HMRC failed: {0}")]
+    Http(#[from] Box<ureq::Error>),
+    #[error("HMRC returned malformed data from {url}: {reason}")]
+    BadData { url: String, reason: String },
+}
+
+/// Extends the bundled dataset with rates HMRC has published since the crate
+/// release, through a verbatim-file disk cache in the system cache directory.
+///
+/// Past periods never change and are served from disk forever; the current and
+/// next month (plus a just-published spot/average period) are re-fetched after
+/// a 24-hour TTL to pick up HMRC's rare in-month amendments.
+///
+/// ```no_run
+/// use hmrc_rates::Updater;
+///
+/// let updater = Updater::new();
+/// // Explicit offline fallback: stale rates in a tax tool should be a visible choice.
+/// let rates = updater.refreshed().unwrap_or_else(|e| {
+///     eprintln!("warning: possibly stale rates: {e}");
+///     updater.cached()
+/// });
+/// ```
+pub struct Updater {
+    agent: ureq::Agent,
+    base_url: String,
+    cache_dir: Option<PathBuf>,
+}
+
+impl Default for Updater {
+    fn default() -> Updater {
+        Updater::new()
+    }
+}
+
+impl Updater {
+    /// Infallible: if no system cache directory can be determined, the updater
+    /// simply works cache-less.
+    pub fn new() -> Updater {
+        let agent: ureq::Agent = ureq::Agent::config_builder()
+            .timeout_global(Some(Duration::from_secs(30)))
+            .user_agent(USER_AGENT)
+            .build()
+            .into();
+        Updater {
+            agent,
+            base_url: DEFAULT_BASE_URL.into(),
+            cache_dir: default_cache_dir(),
+        }
+    }
+
+    /// Overrides the cache location (`None`-equivalent: see [`Updater::new`]).
+    pub fn with_cache_dir(mut self, dir: impl Into<PathBuf>) -> Updater {
+        self.cache_dir = Some(dir.into());
+        self
+    }
+
+    /// Overrides the endpoint — mirrors and tests.
+    pub fn with_base_url(mut self, url: impl Into<String>) -> Updater {
+        self.base_url = url.into();
+        self
+    }
+
+    /// Bundled data plus whatever the disk cache holds. Never touches the
+    /// network; unreadable or corrupt cache files are treated as absent.
+    pub fn cached(&self) -> Rates {
+        let mut rates = Rates::new();
+        self.apply_cache(&mut rates);
+        rates
+    }
+
+    /// Bundled ∪ cache ∪ network: fetches every period that could have been
+    /// published since, treating 404 as "not published yet".
+    pub fn refreshed(&self) -> Result<Rates, FetchError> {
+        let mut rates = Rates::new();
+        self.apply_cache(&mut rates);
+
+        let today = chrono::Utc::now().date_naive();
+        let current = Month::from(today);
+
+        // Monthly: from the first month we lack through next month (HMRC
+        // pre-publishes); current and next month may still be amended.
+        let last_known = rates.months().next_back().unwrap_or(current.prev());
+        let mut candidate = last_known.next().min(current);
+        while candidate <= current.next() {
+            let name = format!("monthly_xml_{candidate}.xml");
+            let amendable = candidate >= current;
+            let entries = self.obtain(&name, amendable, |bytes| {
+                let ((y, m), raw) = parse::parse_monthly_xml(bytes)?;
+                if Month::new(y, m) != Some(candidate) {
+                    return Err(parse::ParseError("period mismatch".into()));
+                }
+                dedup(raw)
+            })?;
+            if let Some(entries) = entries {
+                rates.set_period(RateType::Monthly, candidate.key(), entries);
+            }
+            candidate = candidate.next();
+        }
+
+        // Spot and average: the next 31 Mar / 31 Dec period once it's due;
+        // the freshest one stays amendable for 60 days past its end.
+        for (rate_type, prefix) in [(RateType::Spot, "spot"), (RateType::Average, "average")] {
+            let last = match rate_type {
+                RateType::Spot => rates.spot_periods().next_back(),
+                _ => rates.average_periods().next_back(),
+            };
+            let Some(last) = last else { continue };
+            let mut period = last;
+            loop {
+                let end = period.end_month();
+                if Month::from(today) < end {
+                    break; // not due yet
+                }
+                let name = format!("{prefix}_csv_{}-{:02}.csv", period.year(), end.month());
+                let days_past_end = (today.num_days_from_ce()
+                    - end_of_month(period).num_days_from_ce()) as i64;
+                let amendable = (0..=60).contains(&days_past_end);
+                let is_new = period != last;
+                if is_new || amendable {
+                    let entries =
+                        self.obtain(&name, amendable, |bytes| dedup(parse::parse_rates_csv(bytes)?))?;
+                    if let Some(entries) = entries {
+                        rates.set_period(rate_type, period.key(), entries);
+                    }
+                }
+                period = next_year_end(period);
+            }
+        }
+
+        Ok(rates)
+    }
+
+    /// A validated value from cache (when fresh) or network; `None` = 404,
+    /// i.e. not published yet. Corrupt cache falls through to the network;
+    /// only network-validated bytes are cached.
+    fn obtain<T>(
+        &self,
+        name: &str,
+        amendable: bool,
+        validate: impl Fn(&[u8]) -> Result<T, parse::ParseError>,
+    ) -> Result<Option<T>, FetchError> {
+        if let Some(bytes) = self.fresh_cache_bytes(name, amendable) {
+            if let Ok(value) = validate(&bytes) {
+                return Ok(Some(value));
+            }
+        }
+        let url = format!("{}/{}", self.base_url, name);
+        let bytes = match self.agent.get(&url).call() {
+            Ok(mut response) => response
+                .body_mut()
+                .read_to_vec()
+                .map_err(|e| FetchError::Http(Box::new(e)))?,
+            Err(ureq::Error::StatusCode(404)) => return Ok(None),
+            Err(e) => return Err(FetchError::Http(Box::new(e))),
+        };
+        let value = validate(&bytes).map_err(|e| self.bad_data(name, e))?;
+        self.store(name, &bytes);
+        Ok(Some(value))
+    }
+
+    fn fresh_cache_bytes(&self, name: &str, amendable: bool) -> Option<Vec<u8>> {
+        let path = self.cache_path(name)?;
+        let metadata = fs::metadata(&path).ok()?;
+        let fresh = !amendable
+            || metadata
+                .modified()
+                .ok()
+                .and_then(|t| SystemTime::now().duration_since(t).ok())
+                .is_some_and(|age| age < CACHE_TTL);
+        if !fresh {
+            return None;
+        }
+        fs::read(&path).ok()
+    }
+
+    /// Applies every parseable cache file; failures are silently skipped.
+    fn apply_cache(&self, rates: &mut Rates) {
+        let Some(dir) = self.cache_dir.as_deref() else { return };
+        let Ok(entries) = fs::read_dir(dir) else { return };
+        let mut files: Vec<PathBuf> = entries.flatten().map(|e| e.path()).collect();
+        files.sort();
+        for path in files {
+            let Some(name) = path.file_name().and_then(|n| n.to_str()) else { continue };
+            let Ok(bytes) = fs::read(&path) else { continue };
+            let _ = self.apply_file(rates, name, &bytes);
+        }
+    }
+
+    fn apply_file(&self, rates: &mut Rates, name: &str, bytes: &[u8]) -> Result<(), ()> {
+        if let Some(rest) = name.strip_prefix("monthly_xml_").and_then(|r| r.strip_suffix(".xml")) {
+            let key = parse_period_name(rest).ok_or(())?;
+            let ((y, m), raw) = parse::parse_monthly_xml(bytes).map_err(|_| ())?;
+            if Month::new(y, m).map(Month::key) != Some(key) {
+                return Err(());
+            }
+            let entries = dedup(raw).map_err(|_| ())?;
+            rates.set_period(RateType::Monthly, key, entries);
+            return Ok(());
+        }
+        for (rate_type, prefix) in [(RateType::Spot, "spot_csv_"), (RateType::Average, "average_csv_")] {
+            if let Some(rest) = name.strip_prefix(prefix).and_then(|r| r.strip_suffix(".csv")) {
+                let key = parse_period_name(rest).ok_or(())?;
+                let month = Month::from_key(key);
+                let year_end = match month.month() {
+                    3 => YearEnd::march(month.year()),
+                    12 => YearEnd::december(month.year()),
+                    _ => return Err(()),
+                };
+                let raw = parse::parse_rates_csv(bytes).map_err(|_| ())?;
+                let entries = dedup(raw).map_err(|_| ())?;
+                rates.set_period(rate_type, year_end.key(), entries);
+                return Ok(());
+            }
+        }
+        Err(())
+    }
+
+    /// Atomic best-effort cache write; failure only costs a refetch next run.
+    fn store(&self, name: &str, bytes: &[u8]) {
+        let Some(path) = self.cache_path(name) else { return };
+        let Some(dir) = path.parent() else { return };
+        if fs::create_dir_all(dir).is_err() {
+            return;
+        }
+        let tmp = dir.join(format!(".{name}.tmp"));
+        if fs::write(&tmp, bytes).is_ok() && fs::rename(&tmp, &path).is_err() {
+            let _ = fs::remove_file(&tmp);
+        }
+    }
+
+    fn cache_path(&self, name: &str) -> Option<PathBuf> {
+        Some(self.cache_dir.as_deref()?.join(name))
+    }
+
+    fn bad_data(&self, name: &str, e: parse::ParseError) -> FetchError {
+        FetchError::BadData {
+            url: format!("{}/{}", self.base_url, name),
+            reason: e.to_string(),
+        }
+    }
+}
+
+fn default_cache_dir() -> Option<PathBuf> {
+    use etcetera::BaseStrategy;
+    let strategy = etcetera::choose_base_strategy().ok()?;
+    Some(strategy.cache_dir().join("hmrc-rates").join("v1"))
+}
+
+fn dedup(raw: Vec<ParsedRate>) -> Result<Vec<Entry>, parse::ParseError> {
+    Ok(parse::dedup_majority(raw)?
+        .into_iter()
+        .map(|r| Entry { mantissa: r.mantissa, code: r.code, scale: r.scale })
+        .collect())
+}
+
+/// "YYYY-MM" -> month key.
+fn parse_period_name(s: &str) -> Option<i32> {
+    let (y, m) = s.split_once('-')?;
+    Some(Month::new(y.parse().ok()?, m.parse().ok()?)?.key())
+}
+
+fn next_year_end(period: YearEnd) -> YearEnd {
+    if period.is_march() {
+        YearEnd::december(period.year())
+    } else {
+        YearEnd::march(period.year() + 1)
+    }
+}
+
+fn end_of_month(period: YearEnd) -> chrono::NaiveDate {
+    let month = period.end_month();
+    let last_day = crate::date::days_in_month(period.year(), month.month());
+    chrono::NaiveDate::from_ymd_opt(period.year(), month.month(), last_day)
+        .unwrap_or_default()
+}

@@ -73,8 +73,8 @@ impl Rates {
         }
     }
 
-    /// A `Rates` with no data at all (useful with the `http` feature).
-    #[cfg(any(test, feature = "http"))]
+    /// A `Rates` with no data at all.
+    #[cfg(test)]
     pub(crate) fn empty() -> Rates {
         Rates {
             monthly: Series::new(store::EMPTY_SERIES),

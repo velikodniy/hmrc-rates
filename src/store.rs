@@ -39,7 +39,7 @@ pub(crate) struct StaticSeries {
     pub arena: &'static [Entry],
 }
 
-#[cfg(any(test, feature = "http"))]
+#[cfg(test)]
 pub(crate) const EMPTY_SERIES: StaticSeries = StaticSeries { index: &[], arena: &[] };
 
 #[derive(Copy, Clone)]
@@ -48,7 +48,7 @@ pub(crate) struct StaticWeeks {
     pub arena: &'static [Entry],
 }
 
-#[cfg(any(test, feature = "http"))]
+#[cfg(test)]
 pub(crate) const EMPTY_WEEKS: StaticWeeks = StaticWeeks { index: &[], arena: &[] };
 
 /// A key-addressed series: bundled statics plus an overlay of fetched periods.

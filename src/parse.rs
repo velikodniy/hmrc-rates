@@ -30,6 +30,7 @@ pub struct ParsedRate {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)] // consumed by build.rs; the weekly series is never fetched at runtime
 pub struct WeeklyRow {
     pub date: (i32, u32, u32), // ISO year, month, day
     pub rate: ParsedRate,
@@ -217,6 +218,7 @@ pub fn parse_rates_csv(bytes: &[u8]) -> Result<Vec<ParsedRate>, ParseError> {
 }
 
 /// Parses the normalized weekly amendments CSV (`Date,Country,Currency Name,Currency Code,Rate`).
+#[allow(dead_code)] // consumed by build.rs; the weekly series is never fetched at runtime
 pub fn parse_weekly_csv(bytes: &[u8]) -> Result<Vec<WeeklyRow>, ParseError> {
     let text = decode_utf8_lossy_bom(bytes);
     let mut reader = csv::Reader::from_reader(text.as_bytes());
