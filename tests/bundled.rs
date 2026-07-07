@@ -69,6 +69,18 @@ fn strict_monthly_lookup_errors_outside_coverage() {
 }
 
 #[test]
+fn absurd_year_ends_error_instead_of_panicking() {
+    let rates = Rates::new();
+    for year in [i32::MAX, i32::MIN, 2025 + i32::MIN] {
+        let err = rates.spot(YearEnd::march(year));
+        assert!(
+            matches!(err, Err(LookupError::PeriodNotAvailable { .. })),
+            "year {year}: {err:?}"
+        );
+    }
+}
+
+#[test]
 fn gbp_identity_everywhere() {
     let rates = Rates::new();
     // Any month, including unpublished ones.
@@ -80,6 +92,10 @@ fn gbp_identity_everywhere() {
     // Through tables too.
     let table = rates.spot(YearEnd::december(2024)).unwrap();
     assert_eq!(table.rate("GBP").unwrap().units_per_gbp(), Decimal::ONE);
+    // The fallback never substitutes a month for GBP: £1 = £1 as requested.
+    let next = rates.months().next_back().unwrap().next();
+    let rate = rates.monthly_rate_or_earlier("GBP", next, 5).unwrap();
+    assert_eq!(rate.period(), Period::Month(next));
 }
 
 #[test]

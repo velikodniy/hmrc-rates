@@ -110,13 +110,18 @@ impl Updater {
         let today = chrono::Utc::now().date_naive();
         let current = Month::from(today);
 
-        // Monthly: from the first month we lack through next month (HMRC
-        // pre-publishes); current and next month may still be amended.
-        let last_known = rates.months().next_back().unwrap_or(current.prev());
-        let mut candidate = last_known.next().min(current);
+        // Monthly: from the first month we lack — a transient 404 must not
+        // leave a permanent gap — through next month (HMRC pre-publishes);
+        // current and next month may still be amended.
+        let first_missing = first_gap(rates.months(), Month::next).unwrap_or(current);
+        let mut candidate = first_missing.min(current);
         while candidate <= current.next() {
-            let name = format!("monthly_xml_{candidate}.xml");
             let amendable = candidate >= current;
+            if !amendable && rates.monthly(candidate).is_ok() {
+                candidate = candidate.next();
+                continue; // already have an immutable copy
+            }
+            let name = format!("monthly_xml_{candidate}.xml");
             let entries = self.obtain(&name, amendable, |bytes| {
                 let ((y, m), raw) = parse::parse_monthly_xml(bytes)?;
                 if Month::new(y, m) != Some(candidate) {
@@ -130,15 +135,24 @@ impl Updater {
             candidate = candidate.next();
         }
 
-        // Spot and average: the next 31 Mar / 31 Dec period once it's due;
-        // the freshest one stays amendable for 60 days past its end.
+        // Spot and average: every 31 Mar / 31 Dec period we lack once it's
+        // due; the freshest one stays amendable for 60 days past its end.
         for (rate_type, prefix) in [(RateType::Spot, "spot"), (RateType::Average, "average")] {
-            let last = match rate_type {
-                RateType::Spot => rates.spot_periods().next_back(),
-                _ => rates.average_periods().next_back(),
+            let (first_missing, newest) = match rate_type {
+                RateType::Spot => (
+                    first_gap(rates.spot_periods(), next_year_end),
+                    rates.spot_periods().next_back(),
+                ),
+                _ => (
+                    first_gap(rates.average_periods(), next_year_end),
+                    rates.average_periods().next_back(),
+                ),
             };
-            let Some(last) = last else { continue };
-            let mut period = last;
+            let Some(first_missing) = first_missing else {
+                continue;
+            };
+            // Start no later than the newest period: it may still be amended.
+            let mut period = newest.map_or(first_missing, |n| first_missing.min(n));
             loop {
                 let end = period.end_month();
                 if Month::from(today) < end {
@@ -148,8 +162,11 @@ impl Updater {
                 let days_past_end =
                     (today.num_days_from_ce() - end_of_month(period).num_days_from_ce()) as i64;
                 let amendable = (0..=60).contains(&days_past_end);
-                let is_new = period != last;
-                if is_new || amendable {
+                let have = match rate_type {
+                    RateType::Spot => rates.spot(period).is_ok(),
+                    _ => rates.average(period).is_ok(),
+                };
+                if !have || amendable {
                     let entries = self.obtain(&name, amendable, |bytes| {
                         dedup(parse::parse_rates_csv(bytes)?)
                     })?;
@@ -273,7 +290,10 @@ impl Updater {
         if fs::create_dir_all(dir).is_err() {
             return;
         }
-        let tmp = dir.join(format!(".{name}.tmp"));
+        // Unique tmp name: concurrent writers must not truncate each other.
+        static TMP_SEQ: core::sync::atomic::AtomicU64 = core::sync::atomic::AtomicU64::new(0);
+        let seq = TMP_SEQ.fetch_add(1, core::sync::atomic::Ordering::Relaxed);
+        let tmp = dir.join(format!(".{name}.{}.{seq}.tmp", std::process::id()));
         if fs::write(&tmp, bytes).is_ok() && fs::rename(&tmp, &path).is_err() {
             let _ = fs::remove_file(&tmp);
         }
@@ -314,6 +334,21 @@ fn parse_period_name(s: &str) -> Option<i32> {
     Some(Month::new(y.parse().ok()?, m.parse().ok()?)?.key())
 }
 
+/// The first period missing from an ascending run, or `None` for an empty series.
+fn first_gap<T: Copy + PartialEq>(
+    mut periods: impl Iterator<Item = T>,
+    next: impl Fn(T) -> T,
+) -> Option<T> {
+    let mut expected = next(periods.next()?);
+    for period in periods {
+        if period != expected {
+            break;
+        }
+        expected = next(period);
+    }
+    Some(expected)
+}
+
 fn next_year_end(period: YearEnd) -> YearEnd {
     if period.is_march() {
         YearEnd::december(period.year())
@@ -326,4 +361,47 @@ fn end_of_month(period: YearEnd) -> chrono::NaiveDate {
     let month = period.end_month();
     let last_day = crate::date::days_in_month(period.year(), month.month());
     chrono::NaiveDate::from_ymd_opt(period.year(), month.month(), last_day).unwrap_or_default()
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn first_gap_resumes_at_the_first_missing_period() {
+        let months = |keys: &[i32]| keys.iter().map(|k| Month::from_key(*k)).collect::<Vec<_>>();
+        // Contiguous run: the gap is right after the end.
+        let run = months(&[10, 11, 12]);
+        assert_eq!(
+            first_gap(run.into_iter(), Month::next),
+            Some(Month::from_key(13))
+        );
+        // A hole in the middle must win over the newest period.
+        let holed = months(&[10, 11, 14]);
+        assert_eq!(
+            first_gap(holed.into_iter(), Month::next),
+            Some(Month::from_key(12))
+        );
+        // Empty series has no gap to resume from.
+        assert_eq!(first_gap(core::iter::empty::<Month>(), Month::next), None);
+    }
+
+    #[test]
+    fn year_end_sequence_alternates() {
+        let periods = [
+            YearEnd::march(2025),
+            YearEnd::december(2025),
+            YearEnd::march(2026),
+        ];
+        assert_eq!(
+            first_gap(periods.into_iter(), next_year_end),
+            Some(YearEnd::december(2026))
+        );
+        let gapped = [YearEnd::march(2025), YearEnd::march(2026)];
+        assert_eq!(
+            first_gap(gapped.into_iter(), next_year_end),
+            Some(YearEnd::december(2025))
+        );
+    }
 }

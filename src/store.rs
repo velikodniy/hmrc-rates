@@ -120,22 +120,35 @@ impl Series {
         Some((*keys.first()?, *keys.last()?))
     }
 
-    /// Whether `code` appears in any period of this series.
+    /// Whether an overlay period replaces the static one with this key.
+    fn shadowed(&self, key: i32) -> bool {
+        self.overlay.binary_search_by_key(&key, |(k, _)| *k).is_ok()
+    }
+
+    /// Whether `code` appears in any reachable period of this series.
     pub fn knows(&self, code: [u8; 3]) -> bool {
         let in_statics = {
             let mut start = 0usize;
             self.statics.index.iter().any(|p| {
                 let table = &self.statics.arena[start..p.end as usize];
                 start = p.end as usize;
-                lookup(table, code).is_some()
+                !self.shadowed(p.key) && lookup(table, code).is_some()
             })
         };
         in_statics || self.overlay.iter().any(|(_, t)| lookup(t, code).is_some())
     }
 
-    /// Every distinct code in the series, ascending.
+    /// Every distinct code in reachable periods, ascending.
     pub fn codes(&self) -> Vec<[u8; 3]> {
-        let mut codes: Vec<[u8; 3]> = self.statics.arena.iter().map(|e| e.code).collect();
+        let mut codes: Vec<[u8; 3]> = Vec::with_capacity(self.statics.arena.len());
+        let mut start = 0usize;
+        for p in self.statics.index {
+            let table = &self.statics.arena[start..p.end as usize];
+            start = p.end as usize;
+            if !self.shadowed(p.key) {
+                codes.extend(table.iter().map(|e| e.code));
+            }
+        }
         codes.extend(
             self.overlay
                 .iter()
@@ -240,6 +253,33 @@ mod tests {
         assert_eq!(series.table(2).unwrap().len(), 1);
         assert!(series.knows(*b"USD"));
         assert!(!series.knows(*b"EUR"));
+        assert_eq!(series.codes(), vec![*b"USD"]);
+    }
+
+    #[test]
+    fn overlay_shadows_static_codes() {
+        static ARENA: [Entry; 2] = [
+            Entry {
+                mantissa: 13541,
+                code: *b"USD",
+                scale: 4,
+            },
+            Entry {
+                mantissa: 100,
+                code: *b"XYZ",
+                scale: 2,
+            },
+        ];
+        static INDEX: [PeriodIdx; 1] = [PeriodIdx { key: 1, end: 2 }];
+        let mut series = Series::new(StaticSeries {
+            index: &INDEX,
+            arena: &ARENA,
+        });
+        assert!(series.knows(*b"XYZ"));
+
+        // The replacement table drops XYZ; it must vanish from the series.
+        series.set(1, vec![entry(b"USD", 14000)]);
+        assert!(!series.knows(*b"XYZ"));
         assert_eq!(series.codes(), vec![*b"USD"]);
     }
 

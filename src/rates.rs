@@ -145,21 +145,20 @@ impl Rates {
         max_months_back: u32,
     ) -> Result<Rate, LookupError> {
         let requested = month.into();
+        // GBP is the identity for the requested month itself — no substitution.
+        if Currency::normalize(code) == Some(Currency::GBP.code()) {
+            return Ok(Rate::new(
+                Decimal::ONE,
+                Currency::GBP,
+                Period::Month(requested),
+            ));
+        }
         let mut candidate = requested;
         for _ in 0..=max_months_back {
             if self.monthly.table(candidate.key()).is_some() {
                 return self.monthly(candidate)?.rate(code);
             }
             candidate = candidate.prev();
-        }
-        if let Some(code) = Currency::normalize(code) {
-            if code == Currency::GBP.code() {
-                return Ok(Rate::new(
-                    Decimal::ONE,
-                    Currency::GBP,
-                    Period::Month(requested),
-                ));
-            }
         }
         Err(self.period_missing(RateType::Monthly, Period::Month(requested)))
     }

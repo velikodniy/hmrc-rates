@@ -337,10 +337,12 @@ pub fn dedup_majority(mut rates: Vec<ParsedRate>) -> Result<Vec<ParsedRate>, Par
             [single] => *single,
             [] => continue,
             _ => {
-                let least_precise = tied[0];
-                let consistent = tied.iter().all(|r| {
-                    rounded_to(r.mantissa, r.scale, least_precise.scale)
-                        == Some(least_precise.mantissa)
+                // Pairwise agreement: every more-precise value must round to
+                // every less-precise one (equal-scale conflicts can never agree).
+                let consistent = tied.iter().enumerate().all(|(i, a)| {
+                    tied[i + 1..]
+                        .iter()
+                        .all(|b| rounded_to(b.mantissa, b.scale, a.scale) == Some(a.mantissa))
                 });
                 if !consistent {
                     let code_str = String::from_utf8_lossy(&code).into_owned();
@@ -361,8 +363,9 @@ fn rounded_to(mantissa: u64, scale: u8, target: u8) -> Option<u64> {
     if scale <= target {
         return mantissa.checked_mul(10u64.checked_pow(u32::from(target - scale))?);
     }
-    let divisor = 10u64.checked_pow(u32::from(scale - target))?;
-    Some((mantissa + divisor / 2) / divisor)
+    // u128 so extreme mantissas from untrusted input cannot overflow.
+    let divisor = 10u128.checked_pow(u32::from(scale - target))?;
+    u64::try_from((u128::from(mantissa) + divisor / 2) / divisor).ok()
 }
 
 fn decode_utf8_lossy_bom(bytes: &[u8]) -> String {
@@ -494,5 +497,24 @@ mod tests {
     #[test]
     fn dedup_tie_with_conflicting_values_errors() {
         assert!(dedup_majority(vec![rate(b"USD", 1376045, 6), rate(b"USD", 1385863, 6)]).is_err());
+    }
+
+    #[test]
+    fn dedup_tie_rejects_bridged_equal_scale_conflicts() {
+        // 3.9830 and 3.9834 both round to 3.983 but contradict each other.
+        let rows = vec![
+            rate(b"XCD", 3983, 3),
+            rate(b"XCD", 39830, 4),
+            rate(b"XCD", 39834, 4),
+        ];
+        assert!(dedup_majority(rows).is_err());
+    }
+
+    #[test]
+    fn dedup_tie_survives_extreme_mantissas() {
+        // u64::MAX at scale 9 rounds cleanly to scale 1 — must not overflow.
+        let rows = vec![rate(b"BIG", u64::MAX, 9), rate(b"BIG", 184467440737, 1)];
+        let out = dedup_majority(rows).unwrap();
+        assert_eq!(out, vec![rate(b"BIG", u64::MAX, 9)]);
     }
 }

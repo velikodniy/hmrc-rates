@@ -109,11 +109,15 @@ impl YearEnd {
     /// The month the period ends in (March or December of [`YearEnd::year`]).
     pub fn end_month(self) -> Month {
         let month = if self.december { 12 } else { 3 };
-        Month(self.year * 12 + month - 1)
+        // Saturating: absurd years stay panic-free and match no stored period.
+        Month(self.year.saturating_mul(12).saturating_add(month - 1))
     }
 
     pub(crate) fn key(self) -> i32 {
-        self.year * 2 + self.december as i32
+        // Overflowing years map to a sentinel no stored period can have.
+        self.year
+            .checked_mul(2)
+            .map_or(i32::MIN, |doubled| doubled + self.december as i32)
     }
 
     pub(crate) fn from_key(key: i32) -> YearEnd {
@@ -247,7 +251,8 @@ mod serde_impls {
         fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Month, D::Error> {
             let s = String::deserialize(deserializer)?;
             let parse = || {
-                let (y, m) = s.split_once('-')?;
+                // rsplit: a leading minus sign belongs to a negative year.
+                let (y, m) = s.rsplit_once('-')?;
                 Month::new(y.parse().ok()?, m.parse().ok()?)
             };
             parse()
