@@ -20,7 +20,7 @@ Base: `https://www.trade-tariff.service.gov.uk/api/v2/exchange_rates/`
 ## Archived history: UK Government Web Archive (one-off backfill)
 
 Everything older than the API era was recovered once by `scripts/backfill_archive.py`
-(URL tables inline there) from `webarchive.nationalarchives.gov.uk` snapshots of
+(its URL tables are inline in the script) from `webarchive.nationalarchives.gov.uk` snapshots of
 withdrawn gov.uk publications and the pre-2014 `hmrc.gov.uk/softwaredevelopers` XMLs.
 The live asset URLs are dead; the archive is the only source.
 

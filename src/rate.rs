@@ -5,17 +5,6 @@ use crate::types::{Currency, Period};
 /// A resolved HMRC rate: currency units per £1, with exact `Decimal` arithmetic.
 ///
 /// The crate never rounds — callers apply whatever rounding their tax context requires.
-///
-/// ```
-/// use hmrc_rates::Rates;
-/// use rust_decimal::Decimal;
-///
-/// let rates = Rates::new();
-/// let rate = rates.monthly_rate("USD", hmrc_rates::Month::new(2025, 8).unwrap())?;
-/// let gbp: Decimal = rate.to_gbp(Decimal::from(100));
-/// assert!(gbp > Decimal::ZERO);
-/// # Ok::<(), hmrc_rates::LookupError>(())
-/// ```
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Rate {
@@ -39,6 +28,21 @@ impl Rate {
     }
 
     /// Converts an amount in this rate's currency to GBP (`amount / units_per_gbp`).
+    ///
+    /// Exact division — round the result yourself when you report it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use hmrc_rates::{Month, Rates};
+    /// use rust_decimal::Decimal;
+    ///
+    /// let rates = Rates::new();
+    /// let usd = rates.monthly_rate("USD", Month::new(2025, 8).unwrap())?;
+    /// let gbp = usd.to_gbp(Decimal::from(2500));
+    /// println!("£{}", gbp.round_dp(2));
+    /// # Ok::<(), hmrc_rates::LookupError>(())
+    /// ```
     pub fn to_gbp(&self, amount: Decimal) -> Decimal {
         amount / self.units_per_gbp
     }
@@ -48,6 +52,7 @@ impl Rate {
         gbp * self.units_per_gbp
     }
 
+    /// The currency this rate quotes against GBP.
     pub fn currency(&self) -> Currency {
         self.currency
     }

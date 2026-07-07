@@ -23,19 +23,22 @@ impl Month {
         Some(Month(key))
     }
 
+    /// The calendar year.
     pub fn year(self) -> i32 {
         self.0.div_euclid(12)
     }
 
-    /// 1..=12
+    /// The month number, `1..=12`.
     pub fn month(self) -> u32 {
         (self.0.rem_euclid(12) + 1) as u32
     }
 
+    /// The following month (saturating at the representable maximum).
     pub fn next(self) -> Month {
         Month(self.0.saturating_add(1))
     }
 
+    /// The preceding month (saturating at the representable minimum).
     pub fn prev(self) -> Month {
         Month(self.0.saturating_sub(1))
     }
@@ -93,10 +96,12 @@ impl YearEnd {
         }
     }
 
+    /// The calendar year the period ends in.
     pub fn year(self) -> i32 {
         self.year
     }
 
+    /// `true` for a 31 March year end, `false` for 31 December.
     pub fn is_march(self) -> bool {
         !self.december
     }
@@ -126,8 +131,9 @@ impl fmt::Display for YearEnd {
     }
 }
 
-/// An ISO 4217-style currency code as published by HMRC (three ASCII letters).
+/// A three-letter currency code as published by HMRC.
 ///
+/// Codes are HMRC's own, not always ISO 4217 — Ecuador appears as `ECS`.
 /// Lookups accept plain `&str` (case-insensitive); the library returns `Currency`.
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Currency([u8; 3]);
@@ -136,6 +142,7 @@ impl Currency {
     /// Pound sterling, the base of every HMRC rate.
     pub const GBP: Currency = Currency(*b"GBP");
 
+    /// The code as three uppercase ASCII letters.
     pub fn as_str(&self) -> &str {
         // Invariant: always three ASCII uppercase letters.
         core::str::from_utf8(&self.0).unwrap_or("???")
@@ -203,13 +210,12 @@ impl fmt::Display for RateType {
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 #[non_exhaustive]
 pub enum Period {
+    /// A calendar month (monthly series).
     Month(Month),
+    /// A year ending 31 March or 31 December (spot and average series).
     YearEnd(YearEnd),
     /// An inclusive weekly-amendment validity range.
-    Week {
-        start: NaiveDate,
-        end: NaiveDate,
-    },
+    Week { start: NaiveDate, end: NaiveDate },
 }
 
 impl fmt::Display for Period {

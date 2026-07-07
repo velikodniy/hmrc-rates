@@ -24,16 +24,7 @@ fn day_to_date(day: i32) -> Option<NaiveDate> {
 /// All HMRC rate tables: bundled data plus (with the `http` feature) fetched periods.
 ///
 /// `Send + Sync`; cloning is cheap — bundled data is shared statics.
-///
-/// ```
-/// use hmrc_rates::{Rates, Month};
-/// use rust_decimal::Decimal;
-///
-/// let rates = Rates::new();
-/// let month = Month::new(2025, 8).unwrap();
-/// let gbp = rates.monthly_rate("USD", month)?.to_gbp(Decimal::from(100));
-/// # Ok::<(), hmrc_rates::LookupError>(())
-/// ```
+/// Start with [`Rates::new`].
 #[derive(Clone)]
 pub struct Rates {
     monthly: Series,
@@ -63,6 +54,15 @@ impl Default for Rates {
 impl Rates {
     /// The bundled dataset. Infallible and effectively free: the tables live
     /// in the binary's read-only data, nothing is parsed or allocated.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use hmrc_rates::Rates;
+    ///
+    /// let rates = Rates::new();
+    /// assert!(rates.months().count() > 100);
+    /// ```
     #[cfg(feature = "bundled")]
     pub fn new() -> Rates {
         Rates {
@@ -98,6 +98,19 @@ impl Rates {
     ///
     /// Accepts anything convertible to [`Month`], including `chrono::NaiveDate`.
     /// `"GBP"` (any case) returns the identity rate for any month.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use hmrc_rates::Rates;
+    /// use rust_decimal::Decimal;
+    ///
+    /// let rates = Rates::new();
+    /// let date = chrono::NaiveDate::from_ymd_opt(2025, 8, 15).unwrap();
+    /// let rate = rates.monthly_rate("USD", date)?;
+    /// let gbp = rate.to_gbp(Decimal::from(100));
+    /// # Ok::<(), hmrc_rates::LookupError>(())
+    /// ```
     pub fn monthly_rate(&self, code: &str, month: impl Into<Month>) -> Result<Rate, LookupError> {
         let month = month.into();
         // £1 = £1 holds for every month, published or not.
@@ -109,7 +122,22 @@ impl Rates {
 
     /// Like [`Rates::monthly_rate`], but walks back to the nearest earlier
     /// published month, at most `max_months_back` steps.
+    ///
+    /// This is the crate's only fallback, and it is opt-in.
     /// [`Rate::period`] reveals which month was actually used.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use hmrc_rates::{Period, Rates};
+    ///
+    /// let rates = Rates::new();
+    /// let next = rates.months().next_back().unwrap().next(); // not published yet
+    /// assert!(rates.monthly_rate("USD", next).is_err()); // strict lookup fails
+    /// let rate = rates.monthly_rate_or_earlier("USD", next, 1)?;
+    /// assert_ne!(rate.period(), Period::Month(next)); // the substitution is visible
+    /// # Ok::<(), hmrc_rates::LookupError>(())
+    /// ```
     pub fn monthly_rate_or_earlier(
         &self,
         code: &str,
@@ -152,11 +180,32 @@ impl Rates {
     }
 
     /// The spot table for a 31 March / 31 December period.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use hmrc_rates::{Rates, YearEnd};
+    ///
+    /// let rates = Rates::new();
+    /// let usd = rates.spot(YearEnd::december(2024))?.rate("USD")?;
+    /// # Ok::<(), hmrc_rates::LookupError>(())
+    /// ```
     pub fn spot(&self, period: YearEnd) -> Result<Table<'_>, LookupError> {
         Self::year_end_table(&self.spot, RateType::Spot, period)
     }
 
     /// The yearly-average table for a 31 March / 31 December period.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use hmrc_rates::{Rates, YearEnd};
+    ///
+    /// let rates = Rates::new();
+    /// // Self Assessment style: the average for the year to 31 March 2025.
+    /// let eur = rates.average(YearEnd::march(2025))?.rate("EUR")?;
+    /// # Ok::<(), hmrc_rates::LookupError>(())
+    /// ```
     pub fn average(&self, period: YearEnd) -> Result<Table<'_>, LookupError> {
         Self::year_end_table(&self.average, RateType::Average, period)
     }
@@ -165,6 +214,17 @@ impl Rates {
     ///
     /// Weekly files list only the currencies HMRC amended that week
     /// (series ran 2014-01 to 2016-04, then was discontinued).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use hmrc_rates::Rates;
+    ///
+    /// let rates = Rates::new();
+    /// let date = chrono::NaiveDate::from_ymd_opt(2014, 1, 10).unwrap();
+    /// let lira = rates.weekly(date)?.rate("TRY")?;
+    /// # Ok::<(), hmrc_rates::LookupError>(())
+    /// ```
     pub fn weekly(&self, date: NaiveDate) -> Result<Table<'_>, LookupError> {
         let day = date_to_day(date);
         if let Some((week, entries)) = self.weeks.containing(day) {
@@ -308,15 +368,6 @@ impl Known<'_> {
 }
 
 /// A borrowed view of one period's table — resolve once, convert many times.
-///
-/// ```
-/// use hmrc_rates::{Rates, YearEnd};
-///
-/// let rates = Rates::new();
-/// let table = rates.average(YearEnd::march(2024))?;
-/// let eur = table.rate("EUR")?;
-/// # Ok::<(), hmrc_rates::LookupError>(())
-/// ```
 #[derive(Copy, Clone)]
 pub struct Table<'a> {
     rate_type: RateType,
@@ -336,15 +387,37 @@ impl core::fmt::Debug for Table<'_> {
 }
 
 impl<'a> Table<'a> {
+    /// The period this table was published for.
     pub fn period(&self) -> Period {
         self.period
     }
 
+    /// The series this table belongs to.
     pub fn rate_type(&self) -> RateType {
         self.rate_type
     }
 
     /// The rate for `code` in this period. `"GBP"` always resolves to the identity rate.
+    ///
+    /// Errors distinguish a code the series has never published
+    /// ([`LookupError::UnknownCurrency`]) from one merely absent this period
+    /// ([`LookupError::NotInPeriod`]).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use hmrc_rates::{Month, Rates};
+    /// use rust_decimal::Decimal;
+    ///
+    /// let rates = Rates::new();
+    /// let table = rates.monthly(Month::new(2025, 8).unwrap())?;
+    /// let eur = table.rate("EUR")?;
+    /// let total: Decimal = [1200, 450, 80]
+    ///     .into_iter()
+    ///     .map(|amount| eur.to_gbp(Decimal::from(amount)))
+    ///     .sum();
+    /// # Ok::<(), hmrc_rates::LookupError>(())
+    /// ```
     pub fn rate(&self, code: &str) -> Result<Rate, LookupError> {
         let Some(normalized) = Currency::normalize(code) else {
             return Err(LookupError::UnknownCurrency {
@@ -378,6 +451,7 @@ impl<'a> Table<'a> {
         self.rate(code).ok()
     }
 
+    /// All `(currency, rate)` pairs in this table, ascending by code.
     pub fn iter(&self) -> impl ExactSizeIterator<Item = (Currency, Rate)> + use<'a> {
         let (rate_type, period) = (self.rate_type, self.period);
         let _ = rate_type;
@@ -387,10 +461,12 @@ impl<'a> Table<'a> {
         })
     }
 
+    /// The number of currencies in this table.
     pub fn len(&self) -> usize {
         self.entries.len()
     }
 
+    /// `true` if the table has no entries.
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }

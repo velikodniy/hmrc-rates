@@ -22,8 +22,10 @@ const CACHE_TTL: Duration = Duration::from_secs(24 * 60 * 60);
 #[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
 pub enum FetchError {
+    /// The request failed at the transport or HTTP level.
     #[error("HTTP request to HMRC failed: {0}")]
     Http(#[from] Box<ureq::Error>),
+    /// The endpoint answered, but the payload failed validation.
     #[error("HMRC returned malformed data from {url}: {reason}")]
     BadData { url: String, reason: String },
 }
@@ -35,16 +37,7 @@ pub enum FetchError {
 /// next month (plus a just-published spot/average period) are re-fetched after
 /// a 24-hour TTL to pick up HMRC's rare in-month amendments.
 ///
-/// ```no_run
-/// use hmrc_rates::Updater;
-///
-/// let updater = Updater::new();
-/// // Explicit offline fallback: stale rates in a tax tool should be a visible choice.
-/// let rates = updater.refreshed().unwrap_or_else(|e| {
-///     eprintln!("warning: possibly stale rates: {e}");
-///     updater.cached()
-/// });
-/// ```
+/// See [`Updater::refreshed`] for the recommended usage pattern.
 pub struct Updater {
     agent: ureq::Agent,
     base_url: String,
@@ -59,7 +52,7 @@ impl Default for Updater {
 
 impl Updater {
     /// Infallible: if no system cache directory can be determined, the updater
-    /// simply works cache-less.
+    /// works without a cache.
     pub fn new() -> Updater {
         let agent: ureq::Agent = ureq::Agent::config_builder()
             .timeout_global(Some(Duration::from_secs(30)))
@@ -73,13 +66,13 @@ impl Updater {
         }
     }
 
-    /// Overrides the cache location (`None`-equivalent: see [`Updater::new`]).
+    /// Overrides the cache directory chosen by [`Updater::new`].
     pub fn with_cache_dir(mut self, dir: impl Into<PathBuf>) -> Updater {
         self.cache_dir = Some(dir.into());
         self
     }
 
-    /// Overrides the endpoint — mirrors and tests.
+    /// Overrides the endpoint — for mirrors and tests.
     pub fn with_base_url(mut self, url: impl Into<String>) -> Updater {
         self.base_url = url.into();
         self
@@ -94,7 +87,22 @@ impl Updater {
     }
 
     /// Bundled ∪ cache ∪ network: fetches every period that could have been
-    /// published since, treating 404 as "not published yet".
+    /// published since, treating 404 as "not published yet". Blocking.
+    ///
+    /// On error, fall back explicitly — stale rates in a tax tool should be
+    /// a visible choice, not a silent default.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use hmrc_rates::Updater;
+    ///
+    /// let updater = Updater::new();
+    /// let rates = updater.refreshed().unwrap_or_else(|e| {
+    ///     eprintln!("warning: possibly stale rates: {e}");
+    ///     updater.cached()
+    /// });
+    /// ```
     pub fn refreshed(&self) -> Result<Rates, FetchError> {
         let mut rates = Rates::new();
         self.apply_cache(&mut rates);
