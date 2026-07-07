@@ -1,0 +1,498 @@
+Date,Country,Currency Name,Currency Code,Rate
+2014-01-08,Turkey,Turkish Lira,TRY,3.5418
+2014-01-22,Argentina,Peso,ARS,10.976
+2014-01-22,South Africa,Rand,ZAR,17.7966
+2014-01-29,Lesotho,Loti,LSL,17.8209
+2014-01-29,Swaziland,Lilangeni,SZL,17.8209
+2014-02-05,Argentina,Peso,ARS,13.2793
+2014-02-05,Turkey,Turkish Lira,TRY,3.8436
+2014-02-12,Iran,Rial,IRR,40866
+2014-02-19,Turkey,Turkish Lira,TRY,3.6265
+2014-02-26,Costa rica,Colon,CRC,877.066
+2014-02-26,Ghana,Cedi,GHS,4.2664
+2014-02-26,Kazakhstan,Tenge,KZT,308.72
+2014-02-26,Kyrgyz republic,Som,KGS,86.4156
+2014-02-26,Russia,Rouble,RUB,58.7769
+2014-02-26,Ukraine,Hryvnia,UAH,14.6982
+2014-02-26,Uruguay,Peso,UYU,37.3604
+2014-02-26,Zambia,Kwacha,ZMW,9.5869
+2014-03-12,Barbados,Dollar,BBD,3.5317
+2014-03-12,Ukraine,Hryvnia,UAH,16.6748
+2014-03-19,Barbados,Dollar,BBD,3.3442
+2014-03-19,Costa Rica,Colon,CRC,935.859
+2014-03-19,Kyrgyz Republic,Som,KGS,91.1204
+2014-03-19,Ukraine,Hryvnia,UAH,15.4377
+2014-03-26,Pakistan,RUPEE,PKR,165.149
+2014-03-26,Somali Republic,SCHILLING,SOS,1654.49
+2014-04-02,Papua New Guinea,Kina,PGK,4.6133
+2014-04-02,Ukraine,Hryvnia,UAH,17.4017
+2014-04-09,Ghana,Cedi,GHS,4.4797
+2014-04-09,Ukraine,Hryvnia,UAH,18.4677
+2014-04-16,Turkey,Turkish Lira,TRY,3.5007
+2014-04-23,Colombia,Peso,COP,3219.1
+2014-04-23,Malawi,Kwacha,MWK,656.321
+2014-04-23,Ukraine,Hryvnia,UAH,21.2531
+2014-04-28,Gambia,Dalasi,GMD,66.5841
+2014-04-28,Ukraine,Hryvnia,UAH,18.988
+2014-04-28,Venezuela,Bolivar Fuerte,VEF,16.8035
+2014-05-28,Ghana,Cedi,GHS,4.9732
+2014-05-28,Honduras,Lempira,HNL,34.6856
+2014-05-28,Ukraine,Hryvnia,UAH,20.1281
+2014-05-28,Zambia,Kwacha,ZMW,11.2253
+2014-06-18,Papua New Guinea,Kina,PGK,4.0664
+2014-06-25,Afghanistan,Afghani,AFN,99.4394
+2014-06-25,Ghana,Cedi,GHS,5.2747
+2014-06-25,Zambia,Kwacha,ZMW,10.6427
+2014-07-02,Venezuela,Bolivar Fuerte,VEF,17.8689
+2014-07-16,Ghana,Cedi,GHS,5.6845
+2014-07-30,Venezuela,Bolivar Fuerte,VEF,18.7732
+2014-08-06,Ghana,Cedi,GHS,6.0345
+2014-08-06,Somali Republic,Schilling,SOS,1444.53
+2014-08-20,Ukraine,Hryvnia,UAH,21.0822
+2014-08-27,Mozambique,Metical,MZN,50.5556
+2014-08-27,Somali Republic,Schilling,SOS,1321.45
+2014-09-17,Mongolia,Tugrik,MNT,2993.18
+2014-10-01,Ukraine,Hryvnia,UAH,23.4879
+2014-10-08,Ghana,Cedi,GHS,5.255
+2014-10-08,Ukraine,Hryvnia,UAH,20.9548
+2014-10-22,Malawi,Kwacha,MWK,679.925
+2014-10-22,Russia,Rouble,RUB,64.7215
+2014-10-29,Paraguay,Guarani,PYG,7375.85
+2014-11-05,Gambia,Dalasi,GMD,69.3296
+2014-11-05,Malawi,Kwacha,MWK,741.907
+2014-11-12,Japan,Yen,JPY,182.931
+2014-11-12,Russia,Rouble,RUB,68.7604
+2014-11-19,Russia,Rouble,RUB,74.1951
+2014-11-19,Ukraine,Hryvnia,UAH,23.0048
+2014-11-26,Ukraine,Hryvnia,UAH,24.2975
+2014-12-03,Somali Republic,Schilling,SOS,1136.66
+2014-12-17,Armenia,Dram,AMD,693.866
+2014-12-17,Colombia,Peso,COP,3588.62
+2014-12-17,Georgia,Lari,GEL,3.147
+2014-12-17,Mexico,Mexican Peso,MXN,22.7654
+2014-12-17,Norway,Norwegian Krone,NOK,11.2525
+2014-12-17,Russia,Rouble,RUB,82.5623
+2014-12-24,Armenia,Dram,AMD,734.713
+2014-12-24,Australia,Dollar,AUD,1.916
+2014-12-24,Georgia,Lari,GEL,2.8387
+2014-12-24,Lesotho,Loti,LSL,18.3187
+2014-12-24,Madagascar,Malagasy Ariary,MGA,4042.49
+2014-12-24,Mozambique,Metical,MZN,52.7487
+2014-12-24,Nigeria,Naira,NGN,282.268
+2014-12-24,Russia,Rouble,RUB,90.3635
+2014-12-24,Swaziland,Lilangeni,SZL,18.3187
+2014-12-31,Hungary,Forint,HUF,403.73
+2014-12-31,Sweden,Krona,SEK,12.2226
+2014-12-31,Syria,Pound,SYP,276.914
+2015-01-07,Russia,Rouble,RUB,84.4441
+2015-01-14,Australia,Dollar,AUD,1.8744
+2015-01-14,Belarus,Rouble,BYR,18525.75
+2015-01-14,Fiji Islands,Dollar,FJD,2.9425
+2015-01-14,Malawi,Kwacha,MWK,698.78
+2015-01-14,Mozambique,Metical,MZN,49.3118
+2015-01-14,Russia,Rouble,RUB,94.87
+2015-01-14,Vanuatu,Vatu,VUV,152.99
+2015-01-14,Venezuela,Bolivar Fuerte,VEF,9.54
+2015-01-14,Zimbabwe,Dollar,ZWL,545.377
+2015-01-21,Armenia,Dram,AMD,738.84
+2015-01-21,Belarus,Rouble,BYR,20806
+2015-01-21,Congo ( DemRep),Congo Fr,CDF,1373.36
+2015-01-21,Japan,Yen,JPY,177.16
+2015-01-21,Nigeria,Naira,NGN,274.22
+2015-01-21,Seychelles,Rupee,SCR,20.4
+2015-01-21,Turkmenistan,New Manat,TMT,5.28864
+2015-01-28,Belarus,Rouble,BYR,22671
+2015-01-28,Brazil,Real,BRL,3.9326
+2015-01-28,India,Rupee,INR,93.11
+2015-01-28,Saotome and Principle,Dobra,STD,32047
+2015-01-28,Switzerland,Franc,CHF,1.2973
+2015-02-04,Libya,Dinar,LYD,2.0599
+2015-02-04,Moldova,Leu,MDL,26.34
+2015-02-04,Switzerland,Franc,CHF,1.3692
+2015-02-11,Australia,Dollar,AUD,1.9426
+2015-02-11,Egypt,Pound,EGP,11.46
+2015-02-11,Fiji Islands,Dollar,FJD,3.0887
+2015-02-11,Libya,Dinar,LYD,2.0569
+2015-02-11,Madagascar,Malagasy Ariary,MGA,4222.25
+2015-02-11,Moldova,Leu,MDL,27.05
+2015-02-11,Russia,Rouble,RUB,105.64
+2015-02-11,Switzerland,Franc,CHF,1.3995
+2015-02-18,Algeria,Dinar,DZD,142.49
+2015-02-18,Brazil,Real,BRL,4.331
+2015-02-18,Canada,Dollar,CAD,1.9218
+2015-02-18,Georgia,Lari,GEL,3.1119
+2015-02-18,Ghana,Cedi,GHS,5.19594
+2015-02-18,Mozambique,Metical,MZN,51.4904
+2015-02-18,Nigeria,Naira,NGN,295.76
+2015-02-18,Russia,Rouble,RUB,99.65
+2015-02-18,Syria,Pound,SYP,303.99
+2015-02-18,Turkey,Turkish Lira,TRY,3.7991
+2015-02-18,Ukraine,Hryvnia,UAH,34.09
+2015-02-25,Mauritius,Rupee,MUR,51.96
+2015-02-25,Moldova,Leu,MDL,28.52
+2015-02-25,Nigeria,Naira,NGN,315.69
+2015-02-25,Ukraine,Hryvnia,UAH,40.28
+2015-02-25,Zambia,Kwacha,ZMW,10.47
+2015-03-04,Georgia,Lari,GEL,3.3482
+2015-03-04,Ukraine,Hryvnia,UAH,43.1
+2015-03-11,Azerbaijan,New Manat,AZN,1.6217
+2015-03-18,Brazil,Real,BRL,4.6742
+2015-03-18,Colombia,Peso,COP,3900.5
+2015-03-18,Denmark,Krone,DKK,10.62
+2015-03-18,European Community,Euro,EUR,1.4232
+2015-03-18,Norway,Norwegian Krone,NOK,12.33
+2015-03-18,Russia,Rouble,RUB,90.79
+2015-03-18,Seychelles,Rupee,SCR,20.31
+2015-03-18,Switzerland,Franc,CHF,1.5174
+2015-03-18,Ukraine,Hryvnia,UAH,33.64
+2015-03-25,Cambodia,Riel,KHR,5908.2125
+2015-03-25,Cape Verde Islands,Escudo,CVE,179.0435
+2015-03-25,Costa Rica,Colon,CRC,787.0389
+2015-03-25,Djibouti,Franc,DJF,262.1742
+2015-03-25,El Salvador,Colon,SVC,12.6548
+2015-03-25,Gambia,Dalasi,GMD,63.5815
+2015-03-25,Guyana,Dollar,GYD,290.0851
+2015-03-25,Iran,Rial,IRR,8.8513
+2015-03-25,Libya,Dinar,LYD,1.9768
+2015-03-25,Maldive Islands,Rufiyaa,MVR,22.0839
+2015-03-25,Moldova,Leu,MDL,26.7013
+2015-03-25,Myanmar,Kyat,MMK,1495.567
+2015-03-25,Nigeria,Naira,NGN,293.6404
+2015-03-25,Saotome and Principle,Dobra,STD,12101.8052
+2015-03-25,Somali Republic,Schilling,SOS,1011.9935
+2015-03-25,Turkmenistan,New Manat,TMT,4.9567
+2015-03-25,Ukraine,Hryvnia,UAH,31.9375
+2015-04-01,Ghana,Cedi,GHS,5.5956
+2015-04-01,Ukraine,Hryvnia,UAH,34.69
+2015-04-01,Zambia,Kwacha,ZMW,11.54
+2015-04-08,Cape Verde Islands,Escudo,CVE,148.4
+2015-04-08,Mauritania,Ouguiya,MRO,470.89
+2015-04-08,Mozambique,Metical,MZN,53.64
+2015-04-08,Russia,Rouble,RUB,85.96
+2015-04-08,Saotome and Principle,Dobra,STD,32478.83
+2015-04-15,Hungary,Forint,HUF,405.41
+2015-04-15,Kyrgyz Republic,Som,KGS,95.68
+2015-04-15,Poland,Zloty,PLN,5.52
+2015-04-22,Belarus,Rouble,BYR,20954.56
+2015-04-22,Brazil,Real,BRL,4.5323
+2015-04-22,Colombia,Peso,COP,3687.37
+2015-04-22,Russia,Rouble,RUB,76.11
+2015-04-22,Zambia,Kwacha,ZMW,10.56
+2015-04-29,Madagascar,Malagasy Ariary,MGA,4607.05
+2015-04-29,Myanmar,Kyat,MMK,1571.03
+2015-04-29,Paraguay,Guarani,PYG,7444.83
+2015-04-29,Ukraine,Hryvnia,UAH,31.33
+2015-04-29,Uruguay,Peso,UYU,39.84
+2015-05-06,Ukraine,Hryvnia,UAH,34.8
+2015-05-13,Honduras,Lempira,HNL,33.38
+2015-05-13,Tanzania,Schilling,TZS,3024.96
+2015-05-13,Ukraine,Hryvnia,UAH,32.25
+2015-05-20,Argentina,Peso,ARS,14.05
+2015-05-20,Armenia,Dram,AMD,741.86
+2015-05-20,Georgia,Lari,GEL,3.5936
+2015-05-20,India,Rupee,INR,100.63
+2015-05-20,Indonesia,Rupiah,IDR,20244.02
+2015-05-20,Kenya,Schilling,KES,147.06
+2015-05-20,Nepal,Rupee,NPR,157.84
+2015-05-20,New Zealand,Dollar,NZD,2.1032
+2015-05-20,Philippines,Peso,PHP,70.3502
+2015-05-20,South Korea,Won,KRW,1729.38
+2015-05-20,Thailand,Baht,THB,52.82
+2015-05-27,Algeria,Dinar,DZD,154.7534
+2015-05-27,Angola,Readj Kwanza,AOA,172.9545
+2015-05-27,Antigua,E Caribbean Dollar,XCD,4.2639
+2015-05-27,Armenia,Dram,AMD,760.7662
+2015-05-27,Aruba,Florin,AWG,2.8268
+2015-05-27,Azerbaijan,New Manat,AZN,1.6561
+2015-05-27,Bahrain,Dinar,BHD,0.5954
+2015-05-27,Bangladesh,Taka,BDT,122.8779
+2015-05-27,Barbados,Dollar,BBD,3.1584
+2015-05-27,Belarus,Rouble,BYR,22424.7426
+2015-05-27,Belize,Dollar,BZD,3.1505
+2015-05-27,Bolivia,Boliviano,BOB,10.8965
+2015-05-27,Burundi,Franc,BIF,2473.272
+2015-05-27,Cambodia,Riel,KHR,6340.5082
+2015-05-27,Cayman Islands,Dollar,KYD,1.2949
+2015-05-27,China,Yuan,CNY,9.8007
+2015-05-27,Congo (DemRep),Congo Fr,CDF,1457.6063
+2015-05-27,Costa Rica,Colon,CRC,839.7423
+2015-05-27,Cuba,Peso,CUP,1.5792
+2015-05-27,Djibouti,Franc,DJF,280.6563
+2015-05-27,Dominica,E Carribean Dollar,XCD,4.2639
+2015-05-27,Dominican Republic,Peso,DOP,70.8116
+2015-05-27,Egypt,Pound,EGP,12.0168
+2015-05-27,El Salvador,Colon,SVC,13.5763
+2015-05-27,Eritrea,Nakfa,ERN,23.6881
+2015-05-27,Ethiopia,Birr,ETB,32.4456
+2015-05-27,Gambia,Dalasi,GMD,67.7953
+2015-05-27,Georgia,Lari,GEL,3.7157
+2015-05-27,Ghana,Cedi,GHS,6.2458
+2015-05-27,Grenada,E Carribean Dollar,XCD,4.2639
+2015-05-27,Guatemala,Quetzal,GTQ,12.0659
+2015-05-27,Guinea Republic,Franc,GNF,11750.8675
+2015-05-27,Guyana,Dollar,GYD,311.7351
+2015-05-27,Haiti,Gourde,HTG,75.1108
+2015-05-27,Honduras,Lempira,HNL,34.6727
+2015-05-27,India,Rupee,INR,99.31
+2015-05-27,Indonesia,Rupiah,IDR,20670.2536
+2015-05-27,Iraq,Dinar,IQD,1838.1947
+2015-05-27,Jamaica,Dollar,JMD,182.714
+2015-05-27,Jordan,Dinar,JOD,1.1185
+2015-05-27,Kazakhstan,Tenge,KZT,293.8269
+2015-05-27,Kenya,Schilling,KES,151.6037
+2015-05-27,Kuwait,Dinar,KWD,0.475
+2015-05-27,Lao People's Dem Rep,Kip,LAK,12752.0806
+2015-05-27,Lebanon,Pound,LBP,2380.652
+2015-05-27,Macao,Pataca,MOP,12.6072
+2015-05-27,Madagascar,Malagasy Ariary,MGA,4919.3425
+2015-05-27,Malawi,Kwacha,MWK,695.324
+2015-05-27,Maldive Islands,Rufiyaa,MVR,23.6407
+2015-05-27,Mauritania,Ouguiya,MRO,495.8704
+2015-05-27,Montserrat,E Carribean Dollar,XCD,4.2639
+2015-05-27,Mozambique,Metical,MZN,56.6224
+2015-05-27,Myanmar,Kyat,MMK,1690.3811
+2015-05-27,Nepal,Rupee,NPR,160.5104
+2015-05-27,New Zealand,Dollar,NZD,2.1291
+2015-05-27,Nicaragua,Gold Cordoba,NIO,42.7691
+2015-05-27,Nigeria,Naira,NGN,314.3408
+2015-05-27,Oman,Rial,OMR,0.6079
+2015-05-27,Pakistan,Rupee,PKR,160.842
+2015-05-27,Panama,Balboa,PAB,1.5792
+2015-05-27,Papua New Guinea,Kina,PGK,4.2756
+2015-05-27,Paraguay,Guarani,PYG,7993.1898
+2015-05-27,Peru,New Sol,PEN,4.9721
+2015-05-27,Qatar,Riyal,QAR,5.7484
+2015-05-27,Rwanda,Franc,RWF,1088.8619
+2015-05-27,Seychelles,Rupee,SCR,21.3587
+2015-05-27,Sri Lanka,Rupee,LKR,210.9818
+2015-05-27,St Christopher and Anguilla,E Carribean Dollar,XCD,4.2639
+2015-05-27,St Lucia,E Carribean Dollar,XCD,4.2639
+2015-05-27,St Vincent,E Carribean Dollar,XCD,4.2639
+2015-05-27,Sudan Republic,Pound,SDG,9.3579
+2015-05-27,Surinam,Dollar,SRD,5.2114
+2015-05-27,Tanzania,Schilling,TZS,3180.5189
+2015-05-27,Thailand,Baht,THB,52.23
+2015-05-27,Trinidad/Tobago,Dollar,TTD,10.0412
+2015-05-27,UAE,Dirham,AED,5.8005
+2015-05-27,Uganda,Schilling,UGX,4726.5613
+2015-05-27,Ukraine,Hryvnia,UAH,33.0054
+2015-05-27,Uruguay,Peso,UYU,41.9516
+2015-05-27,Uzbekistan,Sum,UZS,3983.9082
+2015-05-27,Vanuatu,Vatu,VUV,168.7696
+2015-05-27,Venezuela,Bolivar Fuerte,VEF,9.9332
+2015-05-27,Vietnam,Dong,VND,34371.4662
+2015-05-27,Yemen (Rep of),Rial,YER,339.5686
+2015-05-27,Zimbabwe,Dollar,ZWL,571.5143
+2015-06-10,Georgia,Lari,GEL,3.5098
+2015-06-10,Guinea Republic,Franc,GNF,11055.5
+2015-06-10,Somali Republic,Schilling,SOS,93.08
+2015-06-17,Mongolia,Tugrik,MNT,2864.91
+2015-06-17,Russia,Rouble,RUB,86.302
+2015-06-17,Somali Republic,Schilling,SOS,1059.38
+2015-06-24,Angola,Readj Kwanza,AOA,184.0729
+2015-06-24,Belarus,Rouble,BYR,23820.6969
+2015-06-24,Ghana,Cedi,GHS,6.757
+2015-06-24,New Zealand,Dollar,NZD,2.273
+2015-06-24,South Africa,Rand,ZAR,19.5128
+2015-06-24,Tanzania,Schilling,TZS,3432.9754
+2015-07-01,Moldova,LEU,MDL,30.38
+2015-07-01,Mongolia,Tugrik,MNT,3048.95
+2015-07-01,Rwanda,Franc,RWF,1145.32
+2015-07-01,Tanzania,Schilling,TZS,3629.52
+2015-07-01,Uganda,Schilling,UGX,5214.75
+2015-07-01,Ukraine,Hryvnia,UAH,34.46
+2015-07-08,Gambia,Dalasi,GMD,62.3
+2015-07-08,Tanzania,Schilling,TZS,3406.07
+2015-07-15,Ghana,Cedi,GHS,6.3973
+2015-07-15,Haiti,Gourde,HTG,80.49
+2015-07-15,Tanzania,Schilling,TZS,3159.61
+2015-07-22,Ghana,Cedi,GHS,5.4285
+2015-07-22,Tanzania,Schilling,TZS,3373.4
+2015-07-22,Zambia,Kwacha,ZMW,12.16
+2015-07-29,Angola,Readj Kwanza,AOA,196.36
+2015-07-29,Burundi,Franc,BIF,2554.99
+2015-07-29,Canada,Dollar,CAD,2.0363
+2015-07-29,Colombia,Peso,COP,4297.15
+2015-07-29,Ghana,Cedi,GHS,5.0812
+2015-07-29,Haiti,Gourde,HTG,86.02
+2015-07-29,Kenya,Schilling,KES,160.17
+2015-07-29,Kyrgyz Republic,Som,KGS,98.5
+2015-07-29,Malawi,Kwacha,MWK,719.32
+2015-07-29,Myanmar,Kyat,MMK,1916.48
+2015-07-29,Norway,Norwegian Krone,NOK,12.78
+2015-08-05,Brazil,Real,BRL,5.2263
+2015-08-05,Russia,Rouble,RUB,90.97
+2015-08-05,Sierra Leone,Leone,SLL,6177.91
+2015-08-12,Chile,Peso,CLP,1048.33
+2015-08-12,Ghana,Cedi,GHS,5.9611
+2015-08-12,Madagascar,Malagasy Ariary,MGA,5297.92
+2015-08-12,Malawi,Kwacha,MWK,799.13
+2015-08-12,Mexcio,Mexican Peso,MXN,25.55
+2015-08-12,New Zealand,Dollar,NZD,2.3941
+2015-08-12,Sweden,Krone,SEK,13.63
+2015-08-12,Uruguay,Peso,UYU,44.31
+2015-08-19,Burundi,Franc,BIF,2410.77
+2015-08-19,Colombia,Peso,COP,4545.16
+2015-08-19,Malawi,Kwacha,MWK,864.49
+2015-08-19,Malaysia,Ringgit,MYR,6.3164
+2015-08-19,Russia,Rouble,RUB,98.99
+2015-08-19,South Korea,Won,KRW,1861.44
+2015-08-19,Ukraine,Hryvnia,UAH,32.68
+2015-08-26,Algeria,Dinar,DZD,164.13
+2015-08-26,Ghana,Cedi,GHS,6.3997
+2015-08-26,Haiti,Gourde,HTG,81.23
+2015-08-26,Sierra Leone,Leone,SLL,7239.41
+2015-08-26,Thailand,Baht,THB,55.65
+2015-08-26,Uganda,Schilling,UGX,5517.74
+2015-09-02,Belarus,Rouble,BYR,26284.04
+2015-09-02,Kazakhstan,Tenge,KZT,372.05
+2015-09-02,Russia,Rouble,RUB,107.4
+2015-09-09,Japan,Yen,JPY,183.76
+2015-09-09,Kyrgyz Republic,Som,KGS,101.32
+2015-09-09,Russia,Rouble,RUB,100.88
+2015-09-09,Ukraine,Hryvnia,UAH,32.54
+2015-09-09,Zambia,Kwacha,ZMW,13.18
+2015-09-16,Brazil,Real,BRL,5.8175
+2015-09-16,Ghana,Cedi,GHS,5.765
+2015-09-16,Mozambique,Metical,MZN,64.63
+2015-09-16,Zambia,Kwacha,ZMW,15.26
+2015-09-23,Ghana,Cedi,GHS,6.1632
+2015-09-23,Kazakhstan,Tenge,KZT,406.77
+2015-09-23,Madagascar,Malagasy Ariary,MGA,4799.61
+2015-09-23,Sierra Leone,Leone,SLL,6714.84
+2015-09-23,Turkey,Turkish Lira,TRY,4.7051
+2015-09-30,Angola,Readj Kwanza,AOA,210.21
+2015-09-30,Brazil,Real,BRL,6.2884
+2015-09-30,Georgia,Lari,GEL,3.8199
+2015-09-30,Kazakhstan,Tenge,KZT,435.07
+2015-09-30,Kyrgyz Republic,Som,KGS,109.9
+2015-09-30,Malawi,Kwacha,MWK,876.32
+2015-10-07,Georgia,Lari,GEL,3.612
+2015-10-07,Ghana,Cedi,GHS,5.7671
+2015-10-07,Kazakhstan,Tenge,KZT,409.84
+2015-10-07,Mauritania,Ouguiya,MRO,443.15
+2015-10-07,Sierra leone,Leone,SLL,6351.4
+2015-10-07,Zambia,Kwacha,ZMW,16.42
+2015-10-14,Brazil,Real,BRL,5.8055
+2015-10-14,New Zealand,Dollar,NZD,2.3076
+2015-10-14,Ukraine,Hryvnia,UAH,32.15
+2015-10-14,Zambia,Kwacha,ZMW,18.83
+2015-10-21,Colombia,Peso,COP,4355.54
+2015-10-21,Indonesia,Rupiah,IDR,20545.35
+2015-10-21,Russia,Rouble,RUB,94.16
+2015-10-28,Brazil,Real,BRL,6.1072
+2015-10-28,Mauritania,Ouguiya,MRO,505.06
+2015-10-28,Sierra Leone,Leone,SLL,6795.99
+2015-11-04,Ukraine,Hryvnia,UAH,34.92
+2015-11-11,Lesotho,Loti,LSL,21.32
+2015-11-11,Madagascar,Malagasy Ariary,MGA,5019.3
+2015-11-11,Swaziland,Lilangeni,SZL,21.32
+2015-11-11,Zambia,Kwacha,SMW,19.42
+2015-11-18,Brazil,Real,BRL,5.7173
+2015-11-18,Hungary,Forint,HUF,442.18
+2015-11-18,Kazakhstan,Tenge,KZT,469.01
+2015-11-18,Somali Republic,Schilling,SOS,938.63
+2015-11-18,Uganda,Schilling,UGX,5111.58
+2015-11-25,Colombia,Peso,COP,4681.54
+2015-11-25,Mauritania,Ouguiya,MRO,477.95
+2015-11-25,Russia,Rouble,RUB,101.53
+2015-11-25,Zambia,Kwacha,ZMW,18.27
+2015-12-02,Iraq,Dinar,IQD,1696.24
+2015-12-02,Surinam,Dollar,SRD,6.089
+2015-12-09,Iraq,Dinar,IQD,1791.65
+2015-12-09,Malaysia,Ringgit,MYR,6.3253
+2015-12-09,Mozambique,Metical,MZN,84.88
+2015-12-09,Sierra Leone,Leone,SLL,6395.76
+2015-12-09,Zambia,Kwacha,ZMW,15.5076
+2015-12-16,Malawi,Kwacha,MWK,922.21
+2015-12-16,Mauritania,Ouguiya,MRO,442.56
+2015-12-16,Mozambique,Metical,MZN,79.29
+2015-12-16,Uganda,Schilling,UGX,5011.7
+2015-12-23,Colombia,Peso,COP,5022.29
+2015-12-23,Kyrgyz Republic,Som,KGS,115.43
+2015-12-23,Lesotho,Loti,LSL,24.36
+2015-12-23,New Zealand,Dollar,NZD,2.2171
+2015-12-23,Sudan Republic,Pound,SDG,9.8176
+2015-12-23,Swaziland,Lilangeni,SZL,24.36
+2015-12-23,Zambia,Kwacha,ZMW,16.62
+2015-12-30,Argentina,Peso,ARS,19.37
+2015-12-30,Kazakhstan,Tenge,KZT,512.32
+2015-12-30,Lesotho,Loti,LSL,22.43
+2015-12-30,Mozambique,Metical,MZN,72.67
+2015-12-30,Sudan Republic,Pound,SDG,9.0796
+2015-12-30,Swaziland,Lilangeni,SZL,22.431
+2016-01-06,Azerbaijan,New Manat,AZN,2.3226
+2016-01-06,Colombia,Peso,COP,4733.76
+2016-01-06,Iraq,Dinar,IQD,1636.36
+2016-01-13,Japan,Yen,JPY,173.32
+2016-01-20,Angola,Readj Kwanza,AOA,226.08
+2016-01-20,Bangladesh,Taka,BDT,114.01
+2016-01-20,Mauritania,Ouguiya,MRO,494.3
+2016-01-20,Mozambique,Metical,MZN,68.08
+2016-01-20,Seychelles,Rupee,SCR,18.9
+2016-01-20,Sierra Leone,Leone,SLL,6103.45
+2016-01-20,South Africa,Rand,ZAR,23.8
+2016-01-20,Ukraine,Hryvnia,UAH,33.94
+2016-01-27,Denmark,Krone,DKK,9.68
+2016-01-27,Eurozone,Euro,EUR,1.2978
+2016-01-27,Philippines,Peso,PHP,67.38
+2016-01-27,Saudi Arabia,Riyal,SAR,5.3044
+2016-01-27,Sweden,Krona,SEK,12.08
+2016-01-27,Thailand,Baht,THB,51.31
+2016-01-27,USA,Dollar,USD,1.4144
+2016-02-03,Belarus,Rouble,BYR,29888.66
+2016-02-03,Iraq,Dinar,IQD,1692.39
+2016-02-03,Kazakhstan,Tenge,KZT,546.3
+2016-02-10,Argentina,Peso,ARS,20.62
+2016-02-10,Kazakhstan,Tenge,KZT,517.11
+2016-02-10,Lesotho,Loti,LSL,22.55
+2016-02-10,Seychelles,Rupee,SCR,19.58
+2016-02-10,Swaziland,Lilangeni,SZL,22.55
+2016-02-17,Malawi,Kwacha,MWK,1056.03
+2016-02-17,Mexico,Mexican Peso,MXN,27.18
+2016-02-17,Mozambique,Metical,MZN,70.26
+2016-02-17,Ukraine,Hryvnia,UAH,37.47
+2016-02-24,Belarus,Rouble,BYR,31848.65
+2016-02-24,Seychelles,Rupee,SCR,21
+2016-02-24,South Africa,Rand,ZAR,22.19
+2016-03-02,Japan,Yen,JPY,154.89
+2016-03-02,Kazakhstan,Tenge,KZT,504.33
+2016-03-02,Seychelles,Rupee,SCR,18.67
+2016-03-09,Azerbaijan,New Manat,AZN,2.1695
+2016-03-09,Belarus,Rouble,BYR,29791.78
+2016-03-09,Chile,Peso,CLP,958.02
+2016-03-09,Colombia,Peso,COP,4580.17
+2016-03-09,Georgia,Lari,GEL,3.4173
+2016-03-09,Ghana,Cedi,GHS,5.4066
+2016-03-09,Kyrgyz Republic,Som,KGS,103.16
+2016-03-09,Paraguay,Guarani,PYG,7932.02
+2016-03-09,Russia,Rouble,RUB,104.72
+2016-03-09,Uganda,Schilling,UGX,4648.29
+2016-03-16,Azerbaijan,New Manat,AZN,2.3122
+2016-03-16,Brazil,Real,BRL,5.3875
+2016-03-23,Australia,Dollar,AUD,1.8956
+2016-03-23,Malawi,Kwacha,MWK,1019.59
+2016-03-30,Egypt,Pound,EGP,12.89
+2016-03-30,Malaysia,Ringgit,MYR,5.6348
+2016-03-30,Mexico,Mexican Peso,MXN,24.73
+2016-03-30,Mozambique,Metical,MZN,74
+2016-03-30,Russia,Rouble,RUB,98.76
+2016-03-30,South Korea,Won,KRW,1638.58
+2016-03-30,Uganda,Schilling,UGX,4893.27
+2016-04-06,Gambia,Dalasi,GMD,60.61
+2016-04-13,Azerbaijan,New Manat,AZN,2.1566
+2016-04-13,Kyrgyz Republic,Som,KGS,99.31
+2016-04-13,Lesotho,Loti,LSL,21.04
+2016-04-13,Surinam,Dollar,SRD,7.2489
+2016-04-13,Swaziland,Lilangeni,SZL,21.04
+2016-04-13,Venezuela,Bolivar Fuerte,VEF,14.2
+2016-04-13,Zambia,Kwacha,ZMW,15.35
+2016-04-20,Myanmar,Kyat,MNK,1663.44
+2016-04-20,Ukraine,Hryvnia,UAH,36.14
+2016-04-20,Uruguay,Peso,UYU,44.15
+2016-04-20,Yemen (Rep of),Rial,YER,352.86
+2016-04-20,Zambia,Kwacha,ZMW,13.86
+2016-04-27,Kazakhstan,Tenge,KZT,473.09
+2016-04-27,Peru,New Sol,PEN,4.6502
+2016-04-27,Surinam,Dollar,SRD,8.1358
+2016-04-27,Zambia,Kwacha,ZMW,13.04
