@@ -17,6 +17,7 @@ use crate::types::{Currency, Period};
 /// # Ok::<(), hmrc_rates::LookupError>(())
 /// ```
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Rate {
     units_per_gbp: Decimal,
     currency: Currency,

@@ -163,6 +163,8 @@ impl fmt::Display for Currency {
 
 /// The four rate series HMRC has published.
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
 #[non_exhaustive]
 pub enum RateType {
     /// Monthly customs/VAT rates (2014-02 onwards).
@@ -188,6 +190,8 @@ impl fmt::Display for RateType {
 
 /// The period a [`Rate`](crate::Rate) or table applies to.
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 #[non_exhaustive]
 pub enum Period {
     Month(Month),
@@ -202,6 +206,68 @@ impl fmt::Display for Period {
             Period::Month(m) => m.fmt(f),
             Period::YearEnd(ye) => ye.fmt(f),
             Period::Week { start, end } => write!(f, "week {start} to {end}"),
+        }
+    }
+}
+
+// Compact string forms: Month "2026-07", YearEnd "2026-03"/"2025-12", Currency "USD".
+#[cfg(feature = "serde")]
+mod serde_impls {
+    use super::{Currency, Month, YearEnd};
+    use alloc::format;
+    use alloc::string::String;
+    use serde::de::Error as _;
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    impl Serialize for Month {
+        fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+            serializer.collect_str(self)
+        }
+    }
+
+    impl<'de> Deserialize<'de> for Month {
+        fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Month, D::Error> {
+            let s = String::deserialize(deserializer)?;
+            let parse = || {
+                let (y, m) = s.split_once('-')?;
+                Month::new(y.parse().ok()?, m.parse().ok()?)
+            };
+            parse().ok_or_else(|| D::Error::custom(format!("invalid month '{s}', expected YYYY-MM")))
+        }
+    }
+
+    impl Serialize for YearEnd {
+        fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+            let month = if self.is_march() { 3 } else { 12 };
+            serializer.collect_str(&format_args!("{:04}-{:02}", self.year(), month))
+        }
+    }
+
+    impl<'de> Deserialize<'de> for YearEnd {
+        fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<YearEnd, D::Error> {
+            let month = Month::deserialize(deserializer)?;
+            match month.month() {
+                3 => Ok(YearEnd::march(month.year())),
+                12 => Ok(YearEnd::december(month.year())),
+                _ => Err(D::Error::custom(format!(
+                    "invalid year end '{month}', expected March or December"
+                ))),
+            }
+        }
+    }
+
+    impl Serialize for Currency {
+        fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+            serializer.serialize_str(self.as_str())
+        }
+    }
+
+    impl<'de> Deserialize<'de> for Currency {
+        fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Currency, D::Error> {
+            let s = String::deserialize(deserializer)?;
+            Currency::normalize(&s)
+                .map(Currency::from_code)
+                .ok_or_else(|| D::Error::custom(format!("invalid currency code '{s}'")))
         }
     }
 }
