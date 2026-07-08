@@ -1,9 +1,9 @@
 //! Official HMRC exchange rates with bundled history and exact GBP conversion.
 //!
-//! Four rate series, looked up through one [`Rates`] value: monthly
-//! customs/VAT rates (2014-02 onwards), spot and yearly-average rates for
-//! years ending 31 March / 31 December (December 2010 onwards), and the
-//! discontinued 2014–2016 weekly amendments.
+//! One [`Rates`] value holds all four series HMRC has published:
+//! monthly customs/VAT rates (from 2014-02), spot and yearly-average rates for
+//! years ending 31 March / 31 December (from 2010-12), and the discontinued
+//! 2014–2016 weekly amendments.
 //!
 //! ```
 //! use hmrc_rates::{Rates, Month};
@@ -16,22 +16,21 @@
 //! ```
 //!
 //! Rates are HMRC's `rateNew` figures — currency units per £1; conversion
-//! divides using exact [`rust_decimal`] arithmetic, and the crate never
-//! rounds. Lookups are strict: a period HMRC never published is an error,
-//! never a silently substituted older rate. Fallback is explicit — see
-//! [`Rates::monthly_rate_or_earlier`].
+//! divides, exactly, and the crate never rounds.
+//! Lookups are strict: an unpublished period is an error, never a silently
+//! substituted older rate.
+//! Fallback is explicit — see [`Rates::monthly_rate_or_earlier`].
 //!
 //! # Features
 //!
-//! - `std`, `bundled` (default): the full published history compiled into
-//!   the binary by `build.rs` — no parsing or I/O at startup, ~450 KB of
-//!   read-only data.
-//! - `http`: a blocking `Updater` that fetches periods HMRC has published
-//!   since the crate release, with an on-disk cache.
+//! - `std`, `bundled` (default): the full history compiled in — no parsing
+//!   or I/O at startup, ~450 KB of read-only data.
+//! - `http`: a blocking `Updater` that fetches newly published periods,
+//!   with an on-disk cache.
 //! - `serde`: compact string forms (`"2026-07"`, `"USD"`, `"monthly"`).
 //! - `cli`: the `hmrc-rates` binary.
 //!
-//! The core is `no_std` + `alloc`: with only `bundled` enabled the crate
+//! The core is `no_std` + `alloc`; with only `bundled` enabled the crate
 //! builds on `wasm32-unknown-unknown`.
 
 #![cfg_attr(not(feature = "std"), no_std)]

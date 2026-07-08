@@ -246,7 +246,7 @@ mod tests {
             13541
         );
 
-        // Whole-period replacement.
+        // Whole-period replacement
         series.set(2, vec![entry(b"USD", 14000)]);
         assert_eq!(series.table(2).unwrap().len(), 1);
         assert!(series.knows(*b"USD"));
@@ -275,7 +275,7 @@ mod tests {
         });
         assert!(series.knows(*b"XYZ"));
 
-        // The replacement table drops XYZ; it must vanish from the series.
+        // The replacement table drops XYZ; it must vanish from the series
         series.set(1, vec![entry(b"USD", 14000)]);
         assert!(!series.knows(*b"XYZ"));
         assert_eq!(series.codes(), vec![*b"USD"]);
@@ -283,7 +283,7 @@ mod tests {
 
     #[test]
     fn weeks_containment_boundaries() {
-        // Two adjacent weeks over a static arena.
+        // Two adjacent weeks over a static arena
         static ARENA: [Entry; 2] = [
             Entry {
                 mantissa: 35418,

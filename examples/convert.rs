@@ -9,13 +9,13 @@ use rust_decimal::Decimal;
 fn main() -> Result<(), hmrc_rates::LookupError> {
     let rates = Rates::new();
 
-    // The everyday case: an amount on a date, at that month's rate.
+    // The everyday case: an amount on a date, at that month's rate
     let date = chrono::NaiveDate::from_ymd_opt(2025, 8, 15).unwrap();
     let rate = rates.monthly_rate("USD", date)?;
     let gbp = rate.to_gbp(Decimal::from(2500));
     println!("$2500 on {date} = £{} (exact: £{gbp})", gbp.round_dp(2));
 
-    // Many conversions in one month: resolve the table once.
+    // Many conversions in one month: resolve the table once
     let table = rates.monthly(Month::new(2025, 8).unwrap())?;
     let eur = table.rate("EUR")?;
     let total: Decimal = [1200, 450, 80]
@@ -24,7 +24,7 @@ fn main() -> Result<(), hmrc_rates::LookupError> {
         .sum();
     println!("three EUR invoices = £{}", total.round_dp(2));
 
-    // Self Assessment style: the yearly average to 31 March.
+    // Self Assessment style: the yearly average to 31 March
     let avg = rates.average(YearEnd::march(2025))?.rate("EUR")?;
     println!(
         "EUR average for the year to 31 Mar 2025: {}",

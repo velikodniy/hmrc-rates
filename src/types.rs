@@ -81,7 +81,7 @@ impl core::str::FromStr for Month {
     type Err = ParseMonthError;
 
     fn from_str(s: &str) -> Result<Month, ParseMonthError> {
-        // rsplit: a leading minus sign belongs to a negative year.
+        // rsplit: a leading minus sign belongs to a negative year
         let (y, m) = s.rsplit_once('-').ok_or(ParseMonthError)?;
         let parsed = Month::new(
             y.parse().map_err(|_| ParseMonthError)?,
@@ -145,12 +145,12 @@ impl YearEnd {
     /// The month the period ends in (March or December of [`YearEnd::year`]).
     pub fn end_month(self) -> Month {
         let month = if self.december { 12 } else { 3 };
-        // Saturating: absurd years stay panic-free and match no stored period.
+        // Saturating: absurd years stay panic-free and match no stored period
         Month(self.year.saturating_mul(12).saturating_add(month - 1))
     }
 
     pub(crate) fn key(self) -> i32 {
-        // Overflowing years map to a sentinel no stored period can have.
+        // Overflowing years map to a sentinel no stored period can have
         self.year
             .checked_mul(2)
             .map_or(i32::MIN, |doubled| doubled + self.december as i32)
@@ -184,7 +184,7 @@ impl Currency {
 
     /// The code as three uppercase ASCII letters.
     pub fn as_str(&self) -> &str {
-        // Invariant: always three ASCII uppercase letters.
+        // Invariant: always three ASCII uppercase letters
         core::str::from_utf8(&self.0).unwrap_or("???")
     }
 
@@ -268,7 +268,7 @@ impl fmt::Display for Period {
     }
 }
 
-// Compact string forms: Month "2026-07", YearEnd "2026-03"/"2025-12", Currency "USD".
+// Compact string forms: Month "2026-07", YearEnd "2026-03"/"2025-12", Currency "USD"
 #[cfg(feature = "serde")]
 mod serde_impls {
     use super::{Currency, Month, YearEnd};

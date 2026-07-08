@@ -9,7 +9,7 @@ use rust_decimal::Decimal;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let updater = Updater::new();
 
-    // Staleness must be a visible choice, so the fallback is explicit.
+    // Staleness must be a visible choice, so the fallback is explicit
     let rates = updater.refreshed().unwrap_or_else(|e| {
         eprintln!("warning: possibly stale rates: {e}");
         updater.cached()

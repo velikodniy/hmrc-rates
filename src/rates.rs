@@ -8,7 +8,7 @@ use crate::rate::Rate;
 use crate::store::{self, Entry, Series, WeekIdx, Weeks};
 use crate::types::{Currency, Month, Period, RateType, YearEnd};
 
-// chrono counts day 1 = 0001-01-01; our day 0 = 1970-01-01.
+// chrono counts day 1 = 0001-01-01; our day 0 = 1970-01-01
 const CE_EPOCH_OFFSET: i32 = 719_163;
 
 fn date_to_day(date: NaiveDate) -> i32 {
@@ -152,7 +152,7 @@ impl Rates {
         max_months_back: u32,
     ) -> Result<Rate, LookupError> {
         let requested = month.into();
-        // GBP resolves for the requested month itself — no substitution.
+        // GBP resolves for the requested month itself — no substitution
         if let Some(rate) = gbp_identity(code, Period::Month(requested)) {
             return Ok(rate);
         }
@@ -483,7 +483,7 @@ mod empty_tests {
         );
         assert!(rates.months().next().is_none());
         assert_eq!(rates.currencies(RateType::Spot).count(), 0);
-        // GBP identity still holds with no data at all.
+        // GBP identity still holds with no data at all
         assert!(rates.monthly_rate("GBP", month).is_ok());
     }
 }
@@ -527,7 +527,7 @@ mod bundled_tests {
         }
     }
 
-    // Round-trip: the generated statics must match a fresh parse of the source file.
+    // Round-trip: the generated statics must match a fresh parse of the source file
     #[cfg(feature = "std")]
     #[test]
     fn codegen_matches_fresh_parse() {
@@ -544,7 +544,7 @@ mod bundled_tests {
             assert_eq!((entry.mantissa, entry.scale), (rate.mantissa, rate.scale));
         }
 
-        // Same for a year-end series: pins build.rs's YearEnd key encoding.
+        // Same for a year-end series: pins build.rs's YearEnd key encoding
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/data/average/2024-12.csv");
         let bytes = std::fs::read(path).unwrap();
         let parsed =

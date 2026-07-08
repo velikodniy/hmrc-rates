@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """One-off backfill of historical HMRC rates from the UK Government Web Archive.
 
-Recovers monthly XML (2014-02..2014-12), yearly average and spot CSVs (from
-Dec 2010), the 2014-2016 weekly amendment series, and normalizes early
-API-era CSVs that lack a currency-code column. Idempotent; kept for
-reproducibility. See docs/data-sources.md for provenance.
+Recovers monthly XML (2014), yearly average and spot CSVs (from Dec 2010) and
+the 2014-2016 weekly amendment series, and normalizes early API-era CSVs that
+lack a currency-code column.
+Idempotent; kept for reproducibility.
 """
 
 import csv

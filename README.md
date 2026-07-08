@@ -3,10 +3,9 @@
 [![crates.io](https://img.shields.io/crates/v/hmrc-rates.svg)](https://crates.io/crates/hmrc-rates)
 [![docs.rs](https://img.shields.io/docsrs/hmrc-rates)](https://docs.rs/hmrc-rates)
 
-Official HMRC exchange rates as a Rust library. The full published history is
-compiled into your binary (~450 KB of read-only data), so `Rates::new()` is
-free and infallible — no parsing, no I/O, no startup cost. Conversions use
-exact `rust_decimal` arithmetic and are never rounded.
+Official HMRC exchange rates as a Rust library.
+The full published history is compiled into your binary (~450 KB of read-only data), so `Rates::new()` is free and infallible — no parsing, no I/O, no startup cost.
+Conversions use exact `rust_decimal` arithmetic and are never rounded.
 
 ## Install
 
@@ -25,12 +24,12 @@ use rust_decimal::Decimal;
 fn main() -> Result<(), hmrc_rates::LookupError> {
     let rates = Rates::new();
 
-    // Monthly customs/VAT rate. Also accepts a chrono::NaiveDate.
+    // Monthly customs/VAT rate; also accepts a chrono::NaiveDate
     let rate = rates.monthly_rate("USD", Month::new(2025, 8).unwrap())?;
     let gbp = rate.to_gbp(Decimal::from(2500)); // exact — you choose the rounding
     println!("$2500 in Aug 2025 = £{}", gbp.round_dp(2));
 
-    // Self Assessment style: the yearly average to 31 March 2025.
+    // Self Assessment style: the yearly average to 31 March 2025
     let eur = rates.average(YearEnd::march(2025))?.rate("EUR")?;
     println!("EUR average, year to 31 Mar 2025: {}", eur.units_per_gbp());
     Ok(())
@@ -46,24 +45,22 @@ One `Rates` value holds all four series HMRC has published:
 
 | Series | Coverage | Lookup |
 |---|---|---|
-| Monthly customs/VAT | 2014-02 → present, no gaps | `monthly_rate(code, month)` |
-| Spot | Dec 2010 → present, years ending 31 Mar / 31 Dec | `spot(YearEnd)` |
-| Yearly average | Dec 2010 → present, years ending 31 Mar / 31 Dec | `average(YearEnd)` |
-| Weekly amendments | 2014-01 → 2016-04, complete (discontinued by HMRC) | `weekly(date)` |
+| Monthly customs/VAT | 2014-02 - present, no gaps | `monthly_rate(code, month)` |
+| Spot | Dec 2010 - present, years ending 31 Mar / 31 Dec | `spot(YearEnd)` |
+| Yearly average | Dec 2010 - present, years ending 31 Mar / 31 Dec | `average(YearEnd)` |
+| Weekly amendments | 2014-01 - 2016-04, complete (discontinued by HMRC) | `weekly(date)` |
 
-Lookups are strict: a period HMRC never published is an error, never a
-silently substituted older rate. The error tells you why — unknown currency,
-period not available (with the loaded range), or currency absent from that
-period. Fallback is opt-in and visible:
+Lookups are strict: a period HMRC never published is an error, never a silently substituted older rate.
+The error says why — unknown currency, period not available (with the loaded range), or currency absent from that period.
+Fallback is opt-in and visible:
 
 ```rust,ignore
 let rate = rates.monthly_rate_or_earlier("USD", month, 2)?;
 rate.period() // reveals which month was actually used
 ```
 
-Currency codes are as published by HMRC, which is not always ISO 4217 —
-Ecuador appears as `ECS`. See [docs/data-sources.md](docs/data-sources.md) for
-where every rate comes from and how the archive era was normalized.
+Currency codes are as published by HMRC, which is not always ISO 4217 — Ecuador appears as `ECS`.
+See [docs/data-sources.md](docs/data-sources.md) for where every rate comes from.
 
 ## Features
 
@@ -75,20 +72,18 @@ where every rate comes from and how the archive era was normalized.
 | `serde` | no | compact string forms: `"2026-07"`, `"USD"`, `"monthly"` |
 | `cli` | no | the `hmrc-rates` binary |
 
-The core is `no_std` + `alloc`: `default-features = false, features =
-["bundled"]` builds on `wasm32-unknown-unknown`.
+The core is `no_std` + `alloc`: `default-features = false, features = ["bundled"]` builds on `wasm32-unknown-unknown`.
 
 ## Fresh rates (`http`)
 
-`Updater` fetches whatever HMRC has published since the crate release and
-caches the files verbatim in the system cache directory. Past periods are
-served from disk forever; amendable periods get a 24-hour TTL.
+`Updater` fetches whatever HMRC has published since the crate release and caches the files verbatim in the system cache directory.
+Past periods are served from disk forever; amendable periods get a 24-hour TTL.
 
 ```rust,ignore
 use hmrc_rates::Updater;
 
 let updater = Updater::new();
-// Offline fallback is explicit: stale rates should be a visible choice.
+// Offline fallback is explicit: stale rates should be a visible choice
 let rates = updater.refreshed().unwrap_or_else(|e| {
     eprintln!("warning: possibly stale rates: {e}");
     updater.cached()
@@ -98,9 +93,8 @@ let rates = updater.refreshed().unwrap_or_else(|e| {
 ## Documentation
 
 - API reference: [docs.rs/hmrc-rates](https://docs.rs/hmrc-rates)
-- Data provenance and normalization: [docs/data-sources.md](docs/data-sources.md)
-- Runnable examples: [`examples/convert.rs`](examples/convert.rs) (bundled only),
-  [`examples/fresh.rs`](examples/fresh.rs) (`--features http`)
+- Data provenance: [docs/data-sources.md](docs/data-sources.md)
+- Runnable examples: [`examples/convert.rs`](examples/convert.rs), [`examples/fresh.rs`](examples/fresh.rs) (`--features http`)
 
 ## MSRV and licence
 

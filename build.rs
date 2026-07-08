@@ -1,5 +1,5 @@
-// Build-time codegen: parse data/ and emit static rate tables. A bad data file
-// must fail the build, so panics here are the correct tool.
+// Build-time codegen: parse data/ and emit static rate tables.
+// A bad data file must fail the build, so panics here are the correct tool.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 #[path = "src/parse.rs"]
@@ -142,7 +142,7 @@ fn load_weekly(dir: &Path) -> Vec<(i32, i32, Vec<ParsedRate>)> {
         .map(|(i, (start, rates))| {
             let rates = dedup_majority(rates)
                 .unwrap_or_else(|e| panic!("weekly amendments for day {start}: {e}"));
-            // A week runs 7 days unless the next amendment lands sooner.
+            // A week runs 7 days unless the next amendment lands sooner
             let end = match days.get(i + 1) {
                 Some(next) => (start + 6).min(next - 1),
                 None => start + 6,

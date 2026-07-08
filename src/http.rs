@@ -86,8 +86,9 @@ impl Updater {
         rates
     }
 
-    /// Bundled ∪ cache ∪ network: fetches every period that could have been
-    /// published since, treating 404 as "not published yet". Blocking.
+    /// Fetches every period published since the bundle, blocking.
+    /// Sources are layered: bundled data, then the disk cache, then the
+    /// network; a 404 means "not published yet" and is skipped.
     ///
     /// On error, fall back explicitly — stale rates in a tax tool should be
     /// a visible choice, not a silent default.
@@ -112,7 +113,7 @@ impl Updater {
 
         // Monthly: from the first month we lack — a transient 404 must not
         // leave a permanent gap — through next month (HMRC pre-publishes);
-        // current and next month may still be amended.
+        // current and next month may still be amended
         let first_missing = first_gap(rates.months(), Month::next).unwrap_or(current);
         let mut candidate = first_missing.min(current);
         while candidate <= current.next() {
@@ -132,9 +133,9 @@ impl Updater {
         }
 
         // Spot and average: every 31 Mar / 31 Dec period we lack once it's
-        // due; the freshest one stays amendable for 60 days past its end.
+        // due; the freshest one stays amendable for 60 days past its end
         for (rate_type, prefix) in [(RateType::Spot, "spot"), (RateType::Average, "average")] {
-            // Snapshot is safe: the loop never revisits a period it sets.
+            // Snapshot is safe: the loop never revisits a period it sets
             let periods: Vec<YearEnd> = match rate_type {
                 RateType::Spot => rates.spot_periods().collect(),
                 _ => rates.average_periods().collect(),
@@ -142,7 +143,7 @@ impl Updater {
             let Some(first_missing) = first_gap(periods.iter().copied(), next_year_end) else {
                 continue;
             };
-            // Start no later than the newest period: it may still be amended.
+            // Start no later than the newest period: it may still be amended
             let mut period = periods
                 .last()
                 .map_or(first_missing, |n| first_missing.min(*n));
@@ -269,7 +270,7 @@ impl Updater {
         if fs::create_dir_all(dir).is_err() {
             return;
         }
-        // Unique tmp name: concurrent writers must not truncate each other.
+        // Unique tmp name: concurrent writers must not truncate each other
         static TMP_SEQ: core::sync::atomic::AtomicU64 = core::sync::atomic::AtomicU64::new(0);
         let seq = TMP_SEQ.fetch_add(1, core::sync::atomic::Ordering::Relaxed);
         let tmp = dir.join(format!(".{name}.{}.{seq}.tmp", std::process::id()));
@@ -353,19 +354,19 @@ mod tests {
     #[test]
     fn first_gap_resumes_at_the_first_missing_period() {
         let months = |keys: &[i32]| keys.iter().map(|k| Month::from_key(*k)).collect::<Vec<_>>();
-        // Contiguous run: the gap is right after the end.
+        // Contiguous run: the gap is right after the end
         let run = months(&[10, 11, 12]);
         assert_eq!(
             first_gap(run.into_iter(), Month::next),
             Some(Month::from_key(13))
         );
-        // A hole in the middle must win over the newest period.
+        // A hole in the middle must win over the newest period
         let holed = months(&[10, 11, 14]);
         assert_eq!(
             first_gap(holed.into_iter(), Month::next),
             Some(Month::from_key(12))
         );
-        // Empty series has no gap to resume from.
+        // Empty series has no gap to resume from
         assert_eq!(first_gap(core::iter::empty::<Month>(), Month::next), None);
     }
 

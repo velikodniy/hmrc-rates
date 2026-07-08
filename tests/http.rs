@@ -60,7 +60,7 @@ fn refreshed_fetches_new_months_and_caches_verbatim() {
     );
     next_mock.assert_hits(1);
 
-    // The response body was cached byte-for-byte under the upstream name.
+    // The response body was cached byte-for-byte under the upstream name
     let cached = std::fs::read(cache.path().join(format!("monthly_xml_{next}.xml"))).unwrap();
     assert_eq!(cached, body.as_bytes());
 }
@@ -102,7 +102,7 @@ fn stale_amendable_cache_is_refetched_and_replaced() {
     file.set_times(std::fs::FileTimes::new().set_modified(old))
         .unwrap();
 
-    // ...and an amended upstream file.
+    // ...and an amended upstream file
     let amended = server.mock(|when, then| {
         when.method(GET).path(format!("/{name}"));
         then.status(200).body(monthly_xml(next, "7.0002"));
@@ -115,7 +115,7 @@ fn stale_amendable_cache_is_refetched_and_replaced() {
         dec!(7.0002)
     );
     amended.assert_hits(1);
-    // Cache now holds the amended copy.
+    // Cache now holds the amended copy
     let cached = std::fs::read(&path).unwrap();
     assert!(String::from_utf8(cached).unwrap().contains("7.0002"));
 }
@@ -146,7 +146,7 @@ fn malformed_body_is_bad_data() {
     let err = updater(&server, &cache).refreshed().unwrap_err();
     let message = err.to_string();
     assert!(message.contains("malformed"), "{message}");
-    // Nothing bogus was cached.
+    // Nothing bogus was cached
     assert_eq!(std::fs::read_dir(cache.path()).unwrap().count(), 0);
 }
 
@@ -157,13 +157,13 @@ fn corrupt_cache_files_are_ignored_and_refetched() {
     let next = next_month();
     let name = format!("monthly_xml_{next}.xml");
     std::fs::write(cache.path().join(&name), "not xml at all").unwrap();
-    // Corrupt + amendable: cached() ignores it entirely.
+    // Corrupt + amendable: cached() ignores it entirely
     let updater_offline = Updater::new().with_cache_dir(cache.path());
     let rates = updater_offline.cached();
     assert!(rates.monthly_rate("USD", next).is_err());
 
     // refreshed() replaces it: even a fresh-mtime corrupt file for an
-    // amendable month gets refetched because parsing failed at apply time.
+    // amendable month gets refetched because parsing failed at apply time
     server.mock(|when, then| {
         when.method(GET).path(format!("/{name}"));
         then.status(200).body(monthly_xml(next, "6.5432"));
@@ -186,14 +186,14 @@ fn cached_works_fully_offline() {
     )
     .unwrap();
 
-    // No server involved at all.
+    // No server involved at all
     let updater = Updater::new().with_cache_dir(cache.path());
     let rates = updater.cached();
     assert_eq!(
         rates.monthly_rate("USD", next).unwrap().units_per_gbp(),
         dec!(5.5555)
     );
-    // Bundled data still present underneath.
+    // Bundled data still present underneath
     assert!(
         rates
             .monthly_rate("USD", Month::new(2025, 8).unwrap())

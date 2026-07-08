@@ -1,5 +1,5 @@
-// Shared by build.rs via #[path]; must not use `crate::` paths.
-// Parses the canonical committed/downloaded formats into (code, mantissa, scale) rows.
+// Shared by build.rs via #[path]; must not use `crate::` paths
+// Parses the canonical committed/downloaded formats into (code, mantissa, scale) rows
 
 #[path = "date.rs"]
 pub(crate) mod date;
@@ -329,7 +329,7 @@ pub fn dedup_majority(mut rates: Vec<ParsedRate>) -> Result<Vec<ParsedRate>, Par
             [] => continue,
             _ => {
                 // Pairwise agreement: every more-precise value must round to
-                // every less-precise one (equal-scale conflicts can never agree).
+                // every less-precise one (equal-scale conflicts can never agree)
                 let consistent = tied.iter().enumerate().all(|(i, a)| {
                     tied[i + 1..]
                         .iter()
@@ -354,7 +354,7 @@ fn rounded_to(mantissa: u64, scale: u8, target: u8) -> Option<u64> {
     if scale <= target {
         return mantissa.checked_mul(10u64.checked_pow(u32::from(target - scale))?);
     }
-    // u128 so extreme mantissas from untrusted input cannot overflow.
+    // u128 so extreme mantissas from untrusted input cannot overflow
     let divisor = 10u128.checked_pow(u32::from(scale - target))?;
     u64::try_from((u128::from(mantissa) + divisor / 2) / divisor).ok()
 }
@@ -480,7 +480,7 @@ mod tests {
 
     #[test]
     fn dedup_majority_wins() {
-        // The real XCD April 2015 case: six rows at 3.9831, one at 3.983.
+        // The real XCD April 2015 case: six rows at 3.9831, one at 3.983
         let mut rows = vec![rate(b"XCD", 39831, 4); 6];
         rows.push(rate(b"XCD", 3983, 3));
         assert_eq!(dedup_majority(rows).unwrap(), vec![rate(b"XCD", 39831, 4)]);
@@ -488,7 +488,7 @@ mod tests {
 
     #[test]
     fn dedup_tie_prefers_precision_when_consistent() {
-        // The real USD 2012-03 case: USA 1.5958134 vs Liberia 1.595813.
+        // The real USD 2012-03 case: USA 1.5958134 vs Liberia 1.595813
         let out =
             dedup_majority(vec![rate(b"USD", 1595813, 6), rate(b"USD", 15958134, 7)]).unwrap();
         assert_eq!(out, vec![rate(b"USD", 15958134, 7)]);
@@ -501,7 +501,7 @@ mod tests {
 
     #[test]
     fn dedup_tie_rejects_bridged_equal_scale_conflicts() {
-        // 3.9830 and 3.9834 both round to 3.983 but contradict each other.
+        // 3.9830 and 3.9834 both round to 3.983 but contradict each other
         let rows = vec![
             rate(b"XCD", 3983, 3),
             rate(b"XCD", 39830, 4),
@@ -512,7 +512,7 @@ mod tests {
 
     #[test]
     fn dedup_tie_survives_extreme_mantissas() {
-        // u64::MAX at scale 9 rounds cleanly to scale 1 — must not overflow.
+        // u64::MAX at scale 9 rounds cleanly to scale 1 — must not overflow
         let rows = vec![rate(b"BIG", u64::MAX, 9), rate(b"BIG", 184467440737, 1)];
         let out = dedup_majority(rows).unwrap();
         assert_eq!(out, vec![rate(b"BIG", u64::MAX, 9)]);

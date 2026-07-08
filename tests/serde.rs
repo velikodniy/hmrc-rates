@@ -42,7 +42,7 @@ fn invalid_strings_are_rejected() {
 
 #[test]
 fn negative_years_roundtrip() {
-    // No HMRC data exists for year -1, but our own output must deserialize.
+    // No HMRC data exists for year -1, but our own output must deserialize
     let month = Month::new(-1, 3).unwrap();
     assert_eq!(roundtrip(&month), month);
 }

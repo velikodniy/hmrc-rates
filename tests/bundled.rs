@@ -29,7 +29,7 @@ fn golden_usd_and_eur_august_2025() {
         .monthly_rate("USD", Month::new(2025, 8).unwrap())
         .unwrap();
     assert_eq!(usd.units_per_gbp(), dec!(1.3541));
-    // 0.1 behavior preserved modulo rounding: £73.85 for $100 after round_dp(2).
+    // 0.1 behavior preserved modulo rounding: £73.85 for $100 after round_dp(2)
     assert_eq!(usd.to_gbp(dec!(100.00)).round_dp(2), dec!(73.85));
 
     let eur = rates.monthly_rate("EUR", date(2025, 8, 15)).unwrap();
@@ -83,16 +83,16 @@ fn absurd_year_ends_error_instead_of_panicking() {
 #[test]
 fn gbp_identity_everywhere() {
     let rates = Rates::new();
-    // Any month, including unpublished ones.
+    // Any month, including unpublished ones
     let rate = rates
         .monthly_rate("gbp", Month::new(2035, 1).unwrap())
         .unwrap();
     assert_eq!(rate.units_per_gbp(), Decimal::ONE);
     assert_eq!(rate.to_gbp(dec!(42)), dec!(42));
-    // Through tables too.
+    // Through tables too
     let table = rates.spot(YearEnd::december(2024)).unwrap();
     assert_eq!(table.rate("GBP").unwrap().units_per_gbp(), Decimal::ONE);
-    // The fallback never substitutes a month for GBP: £1 = £1 as requested.
+    // The fallback never substitutes a month for GBP: £1 = £1 as requested
     let next = rates.months().next_back().unwrap().next();
     let rate = rates.monthly_rate_or_earlier("GBP", next, 5).unwrap();
     assert_eq!(rate.period(), Period::Month(next));
@@ -105,12 +105,12 @@ fn fallback_walks_back_and_reveals_period() {
     let next = last.next();
     // Strict lookup fails for the month after the last published one...
     assert!(rates.monthly_rate("USD", next).is_err());
-    // ...the explicit fallback resolves to the last month and says so.
+    // ...the explicit fallback resolves to the last month and says so
     let rate = rates.monthly_rate_or_earlier("USD", next, 1).unwrap();
     assert_eq!(rate.period(), Period::Month(last));
-    // A zero-step fallback stays strict.
+    // A zero-step fallback stays strict
     assert!(rates.monthly_rate_or_earlier("USD", next, 0).is_err());
-    // Exhausted window is an error for the requested month.
+    // Exhausted window is an error for the requested month
     let far = Month::new(2035, 1).unwrap();
     assert!(matches!(
         rates.monthly_rate_or_earlier("USD", far, 12),
@@ -121,7 +121,7 @@ fn fallback_walks_back_and_reveals_period() {
 #[test]
 fn unknown_currency_vs_not_in_period() {
     let rates = Rates::new();
-    // Garbage input and never-published codes fold into UnknownCurrency.
+    // Garbage input and never-published codes fold into UnknownCurrency
     for code in ["XXX", "", "US DOLLARS", "usd extra"] {
         let err = rates
             .monthly_rate(code, Month::new(2025, 8).unwrap())
@@ -131,7 +131,7 @@ fn unknown_currency_vs_not_in_period() {
             "{code:?}: {err}"
         );
     }
-    // GHS appears in the full-list Dec 2015 spot table but not in Dec 2024.
+    // GHS appears in the full-list Dec 2015 spot table but not in Dec 2024
     let err = rates
         .spot(YearEnd::december(2024))
         .unwrap()
@@ -147,7 +147,7 @@ fn unknown_currency_vs_not_in_period() {
         ),
         "{err}"
     );
-    // KMF never appears in any spot table.
+    // KMF never appears in any spot table
     let err = rates
         .spot(YearEnd::december(2024))
         .unwrap()
@@ -175,7 +175,7 @@ fn spot_and_average_periods() {
     let averages: Vec<YearEnd> = rates.average_periods().collect();
     assert_eq!(averages.first().copied(), Some(YearEnd::december(2010)));
 
-    // USA row wins over USD-pegged countries in the messy Dec 2015 file.
+    // USA row wins over USD-pegged countries in the messy Dec 2015 file
     let usd = rates
         .spot(YearEnd::december(2015))
         .unwrap()
@@ -190,7 +190,7 @@ fn spot_and_average_periods() {
         .unwrap();
     assert!(eur.units_per_gbp() > Decimal::ONE);
 
-    // Pre-euro history keeps its historical codes.
+    // Pre-euro history keeps its historical codes
     let eek = rates
         .average(YearEnd::december(2010))
         .unwrap()
@@ -211,7 +211,7 @@ fn spot_and_average_periods() {
 #[test]
 fn weekly_amendments_by_containing_date() {
     let rates = Rates::new();
-    // First-ever amendment: 2014-01-08, TRY 3.5418; valid for the following week.
+    // First-ever amendment: 2014-01-08, TRY 3.5418; valid for the following week
     let table = rates.weekly(date(2014, 1, 10)).unwrap();
     assert_eq!(table.rate("TRY").unwrap().units_per_gbp(), dec!(3.5418));
     let Period::Week { start, .. } = table.period() else {
@@ -219,11 +219,11 @@ fn weekly_amendments_by_containing_date() {
     };
     assert_eq!(start, date(2014, 1, 8));
 
-    // Last-ever amendment week.
+    // Last-ever amendment week
     let last = rates.weekly(date(2016, 4, 27)).unwrap();
     assert_eq!(last.rate("ZMW").unwrap().units_per_gbp(), dec!(13.04));
 
-    // Outside the series' life.
+    // Outside the series' life
     assert!(matches!(
         rates.weekly(date(2017, 1, 1)),
         Err(LookupError::PeriodNotAvailable {
