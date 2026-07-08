@@ -1,5 +1,16 @@
 # Run with prek (pre-commit compatible): `prek install`
+# data/ holds verbatim upstream files; nothing may rewrite them
+exclude: ^data/
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
   - repo: local
     hooks:
       - id: cargo-fmt
