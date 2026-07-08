@@ -7,42 +7,22 @@ use hmrc_rates::{Month, Rates, Updater};
 use httpmock::prelude::*;
 use rust_decimal_macros::dec;
 
-/// The two months the updater always probes: the current and the next one.
-fn probed_months() -> (Month, Month) {
-    let current = Month::from(Utc::now().date_naive());
-    (current, current.next())
+/// The month after the current one — always probed, never yet bundled.
+fn next_month() -> Month {
+    Month::from(Utc::now().date_naive()).next()
 }
 
 fn monthly_xml(month: Month, usd_rate: &str) -> String {
-    let (y, m) = (month.year(), month.month());
-    let days = [
-        31,
-        28 + is_leap(y) as u32,
-        31,
-        30,
-        31,
-        30,
-        31,
-        31,
-        30,
-        31,
-        30,
-        31,
-    ][m as usize - 1];
-    let names = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-    ];
+    let first = chrono::NaiveDate::from_ymd_opt(month.year(), month.month(), 1).unwrap();
+    let last = first + chrono::Months::new(1) - chrono::Days::new(1);
     format!(
         r#"<?xml version="1.0"?>
-<exchangeRateMonthList Period="01/{name}/{y} to {days}/{name}/{y}">
+<exchangeRateMonthList Period="{} to {}">
   <exchangeRate><countryName>USA</countryName><currencyCode>USD</currencyCode><rateNew>{usd_rate}</rateNew></exchangeRate>
 </exchangeRateMonthList>"#,
-        name = names[m as usize - 1],
+        first.format("%d/%b/%Y"),
+        last.format("%d/%b/%Y"),
     )
-}
-
-fn is_leap(y: i32) -> bool {
-    (y % 4 == 0 && y % 100 != 0) || y % 400 == 0
 }
 
 fn updater(server: &MockServer, cache: &tempfile::TempDir) -> Updater {
@@ -63,17 +43,14 @@ fn mock_all_missing(server: &MockServer) {
 fn refreshed_fetches_new_months_and_caches_verbatim() {
     let server = MockServer::start();
     let cache = tempfile::tempdir().unwrap();
-    let (current, next) = probed_months();
+    let next = next_month();
 
     let body = monthly_xml(next, "9.9999");
     let next_mock = server.mock(|when, then| {
         when.method(GET).path(format!("/monthly_xml_{next}.xml"));
         then.status(200).body(&body);
     });
-    server.mock(|when, then| {
-        when.any_request();
-        then.status(404);
-    });
+    mock_all_missing(&server);
 
     let updater = updater(&server, &cache);
     let rates = updater.refreshed().unwrap();
@@ -86,14 +63,13 @@ fn refreshed_fetches_new_months_and_caches_verbatim() {
     // The response body was cached byte-for-byte under the upstream name.
     let cached = std::fs::read(cache.path().join(format!("monthly_xml_{next}.xml"))).unwrap();
     assert_eq!(cached, body.as_bytes());
-    let _ = current;
 }
 
 #[test]
 fn second_refresh_within_ttl_hits_cache_not_network() {
     let server = MockServer::start();
     let cache = tempfile::tempdir().unwrap();
-    let (_, next) = probed_months();
+    let next = next_month();
 
     let next_mock = server.mock(|when, then| {
         when.method(GET).path(format!("/monthly_xml_{next}.xml"));
@@ -115,7 +91,7 @@ fn second_refresh_within_ttl_hits_cache_not_network() {
 fn stale_amendable_cache_is_refetched_and_replaced() {
     let server = MockServer::start();
     let cache = tempfile::tempdir().unwrap();
-    let (_, next) = probed_months();
+    let next = next_month();
     let name = format!("monthly_xml_{next}.xml");
 
     // A stale cached copy of an amendable month...
@@ -178,7 +154,7 @@ fn malformed_body_is_bad_data() {
 fn corrupt_cache_files_are_ignored_and_refetched() {
     let server = MockServer::start();
     let cache = tempfile::tempdir().unwrap();
-    let (_, next) = probed_months();
+    let next = next_month();
     let name = format!("monthly_xml_{next}.xml");
     std::fs::write(cache.path().join(&name), "not xml at all").unwrap();
     // Corrupt + amendable: cached() ignores it entirely.
@@ -188,7 +164,7 @@ fn corrupt_cache_files_are_ignored_and_refetched() {
 
     // refreshed() replaces it: even a fresh-mtime corrupt file for an
     // amendable month gets refetched because parsing failed at apply time.
-    let mock = server.mock(|when, then| {
+    server.mock(|when, then| {
         when.method(GET).path(format!("/{name}"));
         then.status(200).body(monthly_xml(next, "6.5432"));
     });
@@ -198,13 +174,12 @@ fn corrupt_cache_files_are_ignored_and_refetched() {
         rates.monthly_rate("USD", next).unwrap().units_per_gbp(),
         dec!(6.5432)
     );
-    let _ = mock;
 }
 
 #[test]
 fn cached_works_fully_offline() {
     let cache = tempfile::tempdir().unwrap();
-    let (_, next) = probed_months();
+    let next = next_month();
     std::fs::write(
         cache.path().join(format!("monthly_xml_{next}.xml")),
         monthly_xml(next, "5.5555"),

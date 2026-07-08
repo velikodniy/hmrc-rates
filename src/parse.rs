@@ -306,18 +306,9 @@ fn parse_iso_date(s: &str) -> Result<(i32, u32, u32), ParseError> {
 pub fn dedup_majority(mut rates: Vec<ParsedRate>) -> Result<Vec<ParsedRate>, ParseError> {
     rates.sort_unstable_by_key(|r| (r.code, r.mantissa, r.scale));
     let mut out: Vec<ParsedRate> = Vec::with_capacity(rates.len());
-    let mut group_start = 0;
-    while group_start < rates.len() {
-        let code = rates[group_start].code;
-        let group: Vec<ParsedRate> = rates[group_start..]
-            .iter()
-            .take_while(|r| r.code == code)
-            .copied()
-            .collect();
-        group_start += group.len();
-
+    for group in rates.chunk_by(|a, b| a.code == b.code) {
         let mut distinct: Vec<(ParsedRate, usize)> = Vec::new();
-        for rate in &group {
+        for rate in group {
             match distinct
                 .iter_mut()
                 .find(|(r, _)| (r.mantissa, r.scale) == (rate.mantissa, rate.scale))
@@ -345,7 +336,7 @@ pub fn dedup_majority(mut rates: Vec<ParsedRate>) -> Result<Vec<ParsedRate>, Par
                         .all(|b| rounded_to(b.mantissa, b.scale, a.scale) == Some(a.mantissa))
                 });
                 if !consistent {
-                    let code_str = String::from_utf8_lossy(&code).into_owned();
+                    let code_str = String::from_utf8_lossy(&group[0].code).into_owned();
                     return err(format!(
                         "conflicting duplicate rates for '{code_str}' with no majority"
                     ));
@@ -368,9 +359,18 @@ fn rounded_to(mantissa: u64, scale: u8, target: u8) -> Option<u64> {
     u64::try_from((u128::from(mantissa) + divisor / 2) / divisor).ok()
 }
 
-fn decode_utf8_lossy_bom(bytes: &[u8]) -> String {
+fn decode_utf8_lossy_bom(bytes: &[u8]) -> std::borrow::Cow<'_, str> {
     let bytes = bytes.strip_prefix(b"\xef\xbb\xbf").unwrap_or(bytes);
-    String::from_utf8_lossy(bytes).into_owned()
+    String::from_utf8_lossy(bytes)
+}
+
+/// Parses a `"YYYY-MM"` data-file stem into (year, month).
+#[allow(dead_code)] // consumed by build.rs; the library parses names via Month::from_str
+pub fn parse_year_month(s: &str) -> Option<(i32, u32)> {
+    let (y, m) = s.rsplit_once('-')?;
+    let year: i32 = y.parse().ok()?;
+    let month: u32 = m.parse().ok()?;
+    (1..=12).contains(&month).then_some((year, month))
 }
 
 #[cfg(test)]

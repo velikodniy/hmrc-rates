@@ -1,24 +1,36 @@
 use alloc::vec::Vec;
 
-use chrono::NaiveDate;
+use chrono::{Datelike, NaiveDate};
 use rust_decimal::Decimal;
 
-use crate::date;
 use crate::error::LookupError;
 use crate::rate::Rate;
-use crate::store::{self, Entry, Series, Weeks};
+use crate::store::{self, Entry, Series, WeekIdx, Weeks};
 use crate::types::{Currency, Month, Period, RateType, YearEnd};
 
 // chrono counts day 1 = 0001-01-01; our day 0 = 1970-01-01.
 const CE_EPOCH_OFFSET: i32 = 719_163;
 
 fn date_to_day(date: NaiveDate) -> i32 {
-    use chrono::Datelike;
-    date::days_from_civil(date.year(), date.month(), date.day())
+    date.num_days_from_ce() - CE_EPOCH_OFFSET
 }
 
 fn day_to_date(day: i32) -> Option<NaiveDate> {
     NaiveDate::from_num_days_from_ce_opt(day.checked_add(CE_EPOCH_OFFSET)?)
+}
+
+/// The validity range of a weekly index row as a `Period`.
+fn week_period(week: &WeekIdx) -> Option<Period> {
+    Some(Period::Week {
+        start: day_to_date(week.start_day)?,
+        end: day_to_date(week.end_day)?,
+    })
+}
+
+/// £1 = £1 for any period, published or not.
+fn gbp_identity(code: &str, period: Period) -> Option<Rate> {
+    (Currency::normalize(code) == Some(Currency::GBP.code()))
+        .then(|| Rate::new(Decimal::ONE, Currency::GBP, period))
 }
 
 /// All HMRC rate tables: bundled data plus (with the `http` feature) fetched periods.
@@ -112,12 +124,7 @@ impl Rates {
     /// # Ok::<(), hmrc_rates::LookupError>(())
     /// ```
     pub fn monthly_rate(&self, code: &str, month: impl Into<Month>) -> Result<Rate, LookupError> {
-        let month = month.into();
-        // £1 = £1 holds for every month, published or not.
-        if Currency::normalize(code) == Some(Currency::GBP.code()) {
-            return Ok(Rate::new(Decimal::ONE, Currency::GBP, Period::Month(month)));
-        }
-        self.monthly(month)?.rate(code)
+        self.monthly_rate_or_earlier(code, month, 0)
     }
 
     /// Like [`Rates::monthly_rate`], but walks back to the nearest earlier
@@ -145,13 +152,9 @@ impl Rates {
         max_months_back: u32,
     ) -> Result<Rate, LookupError> {
         let requested = month.into();
-        // GBP is the identity for the requested month itself — no substitution.
-        if Currency::normalize(code) == Some(Currency::GBP.code()) {
-            return Ok(Rate::new(
-                Decimal::ONE,
-                Currency::GBP,
-                Period::Month(requested),
-            ));
+        // GBP resolves for the requested month itself — no substitution.
+        if let Some(rate) = gbp_identity(code, Period::Month(requested)) {
+            return Ok(rate);
         }
         let mut candidate = requested;
         for _ in 0..=max_months_back {
@@ -190,7 +193,7 @@ impl Rates {
     /// # Ok::<(), hmrc_rates::LookupError>(())
     /// ```
     pub fn spot(&self, period: YearEnd) -> Result<Table<'_>, LookupError> {
-        Self::year_end_table(&self.spot, RateType::Spot, period)
+        self.year_end_table(&self.spot, RateType::Spot, period)
     }
 
     /// The yearly-average table for a 31 March / 31 December period.
@@ -206,7 +209,7 @@ impl Rates {
     /// # Ok::<(), hmrc_rates::LookupError>(())
     /// ```
     pub fn average(&self, period: YearEnd) -> Result<Table<'_>, LookupError> {
-        Self::year_end_table(&self.average, RateType::Average, period)
+        self.year_end_table(&self.average, RateType::Average, period)
     }
 
     /// The weekly-amendment table whose validity range contains `date`.
@@ -227,44 +230,22 @@ impl Rates {
     pub fn weekly(&self, date: NaiveDate) -> Result<Table<'_>, LookupError> {
         let day = date_to_day(date);
         if let Some((week, entries)) = self.weeks.containing(day) {
-            if let (Some(start), Some(end)) =
-                (day_to_date(week.start_day), day_to_date(week.end_day))
-            {
+            if let Some(period) = week_period(&week) {
                 return Ok(Table {
                     rate_type: RateType::Weekly,
-                    period: Period::Week { start, end },
+                    period,
                     entries,
                     known: Known::Weeks(&self.weeks),
                 });
             }
         }
-        let available = {
-            let idx = self.weeks.index();
-            match (idx.first(), idx.last()) {
-                (Some(first), Some(last)) => {
-                    match (
-                        day_to_date(first.start_day),
-                        day_to_date(first.end_day),
-                        day_to_date(last.start_day),
-                        day_to_date(last.end_day),
-                    ) {
-                        (Some(fs), Some(fe), Some(ls), Some(le)) => Some((
-                            Period::Week { start: fs, end: fe },
-                            Period::Week { start: ls, end: le },
-                        )),
-                        _ => None,
-                    }
-                }
-                _ => None,
-            }
-        };
         Err(LookupError::PeriodNotAvailable {
             table: RateType::Weekly,
             period: Period::Week {
                 start: date,
                 end: date,
             },
-            available,
+            available: self.available(RateType::Weekly),
         })
     }
 
@@ -285,12 +266,7 @@ impl Rates {
 
     /// All weekly-amendment validity ranges, ascending, as [`Period::Week`] items.
     pub fn weeks(&self) -> impl DoubleEndedIterator<Item = Period> + use<'_> {
-        self.weeks.index().iter().filter_map(|w| {
-            Some(Period::Week {
-                start: day_to_date(w.start_day)?,
-                end: day_to_date(w.end_day)?,
-            })
-        })
+        self.weeks.index().iter().filter_map(week_period)
     }
 
     /// Every currency that appears anywhere in the given series, ascending.
@@ -312,6 +288,7 @@ impl Rates {
     }
 
     fn year_end_table<'a>(
+        &'a self,
         series: &'a Series,
         rate_type: RateType,
         period: YearEnd,
@@ -323,30 +300,44 @@ impl Rates {
                 entries,
                 known: Known::Series(series),
             }),
-            None => Err(LookupError::PeriodNotAvailable {
-                table: rate_type,
-                period: Period::YearEnd(period),
-                available: series.first_last().map(|(f, l)| {
+            None => Err(self.period_missing(rate_type, Period::YearEnd(period))),
+        }
+    }
+
+    /// The loaded range of a series, for `PeriodNotAvailable` messages.
+    fn available(&self, table: RateType) -> Option<(Period, Period)> {
+        match table {
+            RateType::Monthly => self.monthly.first_last().map(|(f, l)| {
+                (
+                    Period::Month(Month::from_key(f)),
+                    Period::Month(Month::from_key(l)),
+                )
+            }),
+            RateType::Spot | RateType::Average => {
+                let series = if table == RateType::Spot {
+                    &self.spot
+                } else {
+                    &self.average
+                };
+                series.first_last().map(|(f, l)| {
                     (
                         Period::YearEnd(YearEnd::from_key(f)),
                         Period::YearEnd(YearEnd::from_key(l)),
                     )
-                }),
-            }),
+                })
+            }
+            RateType::Weekly => {
+                let idx = self.weeks.index();
+                Some((week_period(idx.first()?)?, week_period(idx.last()?)?))
+            }
         }
     }
 
     fn period_missing(&self, table: RateType, period: Period) -> LookupError {
-        let available = self.monthly.first_last().map(|(f, l)| {
-            (
-                Period::Month(Month::from_key(f)),
-                Period::Month(Month::from_key(l)),
-            )
-        });
         LookupError::PeriodNotAvailable {
             table,
             period,
-            available,
+            available: self.available(table),
         }
     }
 }
@@ -418,15 +409,15 @@ impl<'a> Table<'a> {
     /// # Ok::<(), hmrc_rates::LookupError>(())
     /// ```
     pub fn rate(&self, code: &str) -> Result<Rate, LookupError> {
+        if let Some(rate) = gbp_identity(code, self.period) {
+            return Ok(rate);
+        }
         let Some(normalized) = Currency::normalize(code) else {
             return Err(LookupError::UnknownCurrency {
                 code: code.trim().into(),
                 table: self.rate_type,
             });
         };
-        if normalized == Currency::GBP.code() {
-            return Ok(Rate::new(Decimal::ONE, Currency::GBP, self.period));
-        }
         match store::lookup(self.entries, normalized) {
             Some(entry) => Ok(Rate::new(
                 entry.decimal(),
@@ -452,8 +443,7 @@ impl<'a> Table<'a> {
 
     /// All `(currency, rate)` pairs in this table, ascending by code.
     pub fn iter(&self) -> impl ExactSizeIterator<Item = (Currency, Rate)> + use<'a> {
-        let (rate_type, period) = (self.rate_type, self.period);
-        let _ = rate_type;
+        let period = self.period;
         self.entries.iter().map(move |e| {
             let currency = Currency::from_code(e.code);
             (currency, Rate::new(e.decimal(), currency, period))
@@ -548,6 +538,18 @@ mod bundled_tests {
 
         let rates = Rates::new();
         let table = rates.monthly(Month::new(year, month).unwrap()).unwrap();
+        assert_eq!(table.len(), parsed.len());
+        for rate in &parsed {
+            let entry = crate::store::lookup(table.entries, rate.code).unwrap();
+            assert_eq!((entry.mantissa, entry.scale), (rate.mantissa, rate.scale));
+        }
+
+        // Same for a year-end series: pins build.rs's YearEnd key encoding.
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/data/average/2024-12.csv");
+        let bytes = std::fs::read(path).unwrap();
+        let parsed =
+            crate::parse::dedup_majority(crate::parse::parse_rates_csv(&bytes).unwrap()).unwrap();
+        let table = rates.average(YearEnd::december(2024)).unwrap();
         assert_eq!(table.len(), parsed.len());
         for rate in &parsed {
             let entry = crate::store::lookup(table.entries, rate.code).unwrap();

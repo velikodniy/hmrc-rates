@@ -52,13 +52,8 @@ fn file_period(path: &Path) -> (i32, u32) {
         .file_stem()
         .and_then(|s| s.to_str())
         .unwrap_or_default();
-    let parse = || -> Option<(i32, u32)> {
-        let (y, m) = stem.split_once('-')?;
-        let year: i32 = y.parse().ok()?;
-        let month: u32 = m.parse().ok()?;
-        (1..=12).contains(&month).then_some((year, month))
-    };
-    parse().unwrap_or_else(|| panic!("{}: file name is not YYYY-MM", path.display()))
+    parse::parse_year_month(stem)
+        .unwrap_or_else(|| panic!("{}: file name is not YYYY-MM", path.display()))
 }
 
 fn load_monthly(dir: &Path) -> SeriesData {
@@ -169,12 +164,17 @@ fn emit_entries(code: &mut String, rates: &[ParsedRate]) {
     }
 }
 
-fn emit_series(code: &mut String, name: &str, series: &SeriesData) {
+/// Emits `{name}_ARENA` from the per-period rate slices.
+fn emit_arena<'a>(code: &mut String, name: &str, tables: impl Iterator<Item = &'a [ParsedRate]>) {
     writeln!(code, "static {name}_ARENA: &[crate::store::Entry] = &[").expect("write");
-    for (_, rates) in series {
+    for rates in tables {
         emit_entries(code, rates);
     }
     writeln!(code, "];").expect("write");
+}
+
+fn emit_series(code: &mut String, name: &str, series: &SeriesData) {
+    emit_arena(code, name, series.iter().map(|(_, r)| r.as_slice()));
 
     writeln!(code, "static {name}_INDEX: &[crate::store::PeriodIdx] = &[").expect("write");
     let mut end = 0u32;
@@ -197,11 +197,7 @@ fn emit_series(code: &mut String, name: &str, series: &SeriesData) {
 }
 
 fn emit_weeks(code: &mut String, name: &str, weeks: &[(i32, i32, Vec<ParsedRate>)]) {
-    writeln!(code, "static {name}_ARENA: &[crate::store::Entry] = &[").expect("write");
-    for (_, _, rates) in weeks {
-        emit_entries(code, rates);
-    }
-    writeln!(code, "];").expect("write");
+    emit_arena(code, name, weeks.iter().map(|(_, _, r)| r.as_slice()));
 
     writeln!(code, "static {name}_INDEX: &[crate::store::WeekIdx] = &[").expect("write");
     let mut end = 0u32;

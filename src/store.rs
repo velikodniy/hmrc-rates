@@ -116,8 +116,14 @@ impl Series {
     }
 
     pub fn first_last(&self) -> Option<(i32, i32)> {
-        let keys = self.keys();
-        Some((*keys.first()?, *keys.last()?))
+        let static_ends = self.statics.index.first().zip(self.statics.index.last());
+        let overlay_ends = self.overlay.first().zip(self.overlay.last());
+        match (static_ends, overlay_ends) {
+            (Some((sf, sl)), Some(((of, _), (ol, _)))) => Some((sf.key.min(*of), sl.key.max(*ol))),
+            (Some((sf, sl)), None) => Some((sf.key, sl.key)),
+            (None, Some(((of, _), (ol, _)))) => Some((*of, *ol)),
+            (None, None) => None,
+        }
     }
 
     /// Whether an overlay period replaces the static one with this key.
@@ -127,26 +133,18 @@ impl Series {
 
     /// Whether `code` appears in any reachable period of this series.
     pub fn knows(&self, code: [u8; 3]) -> bool {
-        let in_statics = {
-            let mut start = 0usize;
-            self.statics.index.iter().any(|p| {
-                let table = &self.statics.arena[start..p.end as usize];
-                start = p.end as usize;
-                !self.shadowed(p.key) && lookup(table, code).is_some()
-            })
-        };
+        let in_statics = (0..self.statics.index.len()).any(|i| {
+            !self.shadowed(self.statics.index[i].key) && lookup(self.slice(i), code).is_some()
+        });
         in_statics || self.overlay.iter().any(|(_, t)| lookup(t, code).is_some())
     }
 
     /// Every distinct code in reachable periods, ascending.
     pub fn codes(&self) -> Vec<[u8; 3]> {
         let mut codes: Vec<[u8; 3]> = Vec::with_capacity(self.statics.arena.len());
-        let mut start = 0usize;
-        for p in self.statics.index {
-            let table = &self.statics.arena[start..p.end as usize];
-            start = p.end as usize;
-            if !self.shadowed(p.key) {
-                codes.extend(table.iter().map(|e| e.code));
+        for i in 0..self.statics.index.len() {
+            if !self.shadowed(self.statics.index[i].key) {
+                codes.extend(self.slice(i).iter().map(|e| e.code));
             }
         }
         codes.extend(

@@ -227,14 +227,23 @@ def header_period(text: str) -> str | None:
     return periods[0] if periods else None
 
 
+def locate_header(rows: list[list[str]]) -> tuple[int, list[str]]:
+    """Index and content of the header row (files may carry preamble rows)."""
+    i = next(i for i, r in enumerate(rows) if r and norm(r[0]) == "country")
+    return i, rows[i]
+
+
+def unit_column(header: list[str]) -> int:
+    return next(i for i, h in enumerate(header) if "unit" in norm(h) and "sterling" not in norm(h))
+
+
 def parse_wide_csv(text: str, fallback_periods: list) -> dict[str, list[tuple[str, str, str, str]]]:
     """-> period -> [(country, unit, sterling, units_per_gbp)]; handles wide files and preambles."""
     rows = [r for r in csv.reader(io.StringIO(text))]
-    header_i = next(i for i, r in enumerate(rows) if r and norm(r[0]) == "country")
-    header = rows[header_i]
+    header_i, header = locate_header(rows)
     context = [" ".join(r) for r in rows[max(0, header_i - 3):header_i]]
 
-    unit_col = next(i for i, h in enumerate(header) if "unit" in norm(h) and "sterling" not in norm(h))
+    unit_col = unit_column(header)
     rate_cols = [i for i, h in enumerate(header) if "units per" in norm(h)]
     sterling_cols = [i for i, h in enumerate(header) if "sterling" in norm(h)]
 
@@ -363,13 +372,12 @@ def normalize_api_era(kind: str, code_map: dict) -> None:
 def extract_rows(text: str, period: str) -> list[tuple[str, str, str, str]]:
     """Rows for `period` from a possibly code-bearing, possibly wide CSV."""
     rows = [r for r in csv.reader(io.StringIO(text))]
-    header_i = next(i for i, r in enumerate(rows) if r and norm(r[0]) == "country")
-    header = rows[header_i]
+    header_i, header = locate_header(rows)
     code_col = next((i for i, h in enumerate(header) if "code" in norm(h)), None)
     if code_col is None:
         parsed = parse_wide_csv(text, [period])
         return parsed.get(period) or next(iter(parsed.values()))
-    unit_col = next(i for i, h in enumerate(header) if "unit" in norm(h) and "sterling" not in norm(h))
+    unit_col = unit_column(header)
     rate_col = max(i for i, h in enumerate(header) if "units per" in norm(h))
     sterling_col = max(i for i, h in enumerate(header) if "sterling" in norm(h))
     out = []
@@ -436,14 +444,11 @@ def backfill_weekly() -> None:
 
 def validate() -> None:
     problems = []
-    expected_avg = {f"{y}-12" for y in range(2010, 2026)} | {f"{y}-03" for y in range(2011, 2027)}
-    expected_spot = expected_avg
-    have_avg = {p.stem for p in DATA.glob("average/*.csv")}
-    have_spot = {p.stem for p in DATA.glob("spot/*.csv")}
-    if missing := sorted(expected_avg - have_avg):
-        problems.append(f"average missing: {missing}")
-    if missing := sorted(expected_spot - have_spot):
-        problems.append(f"spot missing: {missing}")
+    expected = {f"{y}-12" for y in range(2010, 2026)} | {f"{y}-03" for y in range(2011, 2027)}
+    for kind in ("average", "spot"):
+        have = {p.stem for p in DATA.glob(f"{kind}/*.csv")}
+        if missing := sorted(expected - have):
+            problems.append(f"{kind} missing: {missing}")
     for path in sorted(DATA.glob("*/*.csv")):
         if path.parent.name == "weekly":
             continue

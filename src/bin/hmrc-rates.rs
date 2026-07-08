@@ -27,7 +27,7 @@ enum Command {
     /// Show a rate for a period (YYYY-MM; spot/average need MM = 03 or 12).
     Rate {
         code: String,
-        period: String,
+        period: Month,
         #[arg(long, value_enum, default_value_t = Series::Monthly)]
         r#type: Series,
     },
@@ -62,22 +62,9 @@ impl From<Series> for RateType {
     }
 }
 
-fn parse_month(s: &str) -> Result<Month, String> {
-    let invalid = || format!("invalid period '{s}', expected YYYY-MM");
-    let (y, m) = s.split_once('-').ok_or_else(invalid)?;
-    let year = y.parse().map_err(|_| invalid())?;
-    let month = m.parse().map_err(|_| invalid())?;
-    Month::new(year, month).ok_or_else(invalid)
-}
-
 fn year_end(month: Month) -> Result<YearEnd, String> {
-    match month.month() {
-        3 => Ok(YearEnd::march(month.year())),
-        12 => Ok(YearEnd::december(month.year())),
-        _ => Err(format!(
-            "'{month}' is not a spot/average period (use MM = 03 or 12)"
-        )),
-    }
+    YearEnd::from_month(month)
+        .ok_or_else(|| format!("'{month}' is not a spot/average period (use MM = 03 or 12)"))
 }
 
 fn load(refresh: bool) -> Result<Rates, Box<dyn std::error::Error>> {
@@ -102,10 +89,9 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         }
         Command::Rate {
             code,
-            period,
+            period: month,
             r#type,
         } => {
-            let month = parse_month(&period)?;
             let rate = match r#type {
                 Series::Monthly => rates.monthly_rate(&code, month)?,
                 Series::Spot => rates.spot(year_end(month)?)?.rate(&code)?,

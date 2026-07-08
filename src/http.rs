@@ -123,11 +123,7 @@ impl Updater {
             }
             let name = format!("monthly_xml_{candidate}.xml");
             let entries = self.obtain(&name, amendable, |bytes| {
-                let ((y, m), raw) = parse::parse_monthly_xml(bytes)?;
-                if Month::new(y, m) != Some(candidate) {
-                    return Err(parse::ParseError("period mismatch".into()));
-                }
-                dedup(raw)
+                validated_monthly(bytes, candidate)
             })?;
             if let Some(entries) = entries {
                 rates.set_period(RateType::Monthly, candidate.key(), entries);
@@ -138,21 +134,18 @@ impl Updater {
         // Spot and average: every 31 Mar / 31 Dec period we lack once it's
         // due; the freshest one stays amendable for 60 days past its end.
         for (rate_type, prefix) in [(RateType::Spot, "spot"), (RateType::Average, "average")] {
-            let (first_missing, newest) = match rate_type {
-                RateType::Spot => (
-                    first_gap(rates.spot_periods(), next_year_end),
-                    rates.spot_periods().next_back(),
-                ),
-                _ => (
-                    first_gap(rates.average_periods(), next_year_end),
-                    rates.average_periods().next_back(),
-                ),
+            // Snapshot is safe: the loop never revisits a period it sets.
+            let periods: Vec<YearEnd> = match rate_type {
+                RateType::Spot => rates.spot_periods().collect(),
+                _ => rates.average_periods().collect(),
             };
-            let Some(first_missing) = first_missing else {
+            let Some(first_missing) = first_gap(periods.iter().copied(), next_year_end) else {
                 continue;
             };
             // Start no later than the newest period: it may still be amended.
-            let mut period = newest.map_or(first_missing, |n| first_missing.min(n));
+            let mut period = periods
+                .last()
+                .map_or(first_missing, |n| first_missing.min(*n));
             loop {
                 let end = period.end_month();
                 if Month::from(today) < end {
@@ -160,12 +153,9 @@ impl Updater {
                 }
                 let name = format!("{prefix}_csv_{}-{:02}.csv", period.year(), end.month());
                 let days_past_end =
-                    (today.num_days_from_ce() - end_of_month(period).num_days_from_ce()) as i64;
+                    today.num_days_from_ce() - end_of_month(period).num_days_from_ce();
                 let amendable = (0..=60).contains(&days_past_end);
-                let have = match rate_type {
-                    RateType::Spot => rates.spot(period).is_ok(),
-                    _ => rates.average(period).is_ok(),
-                };
+                let have = periods.binary_search(&period).is_ok();
                 if !have || amendable {
                     let entries = self.obtain(&name, amendable, |bytes| {
                         dedup(parse::parse_rates_csv(bytes)?)
@@ -239,23 +229,19 @@ impl Updater {
                 continue;
             };
             let Ok(bytes) = fs::read(&path) else { continue };
-            let _ = self.apply_file(rates, name, &bytes);
+            self.apply_file(rates, name, &bytes);
         }
     }
 
-    fn apply_file(&self, rates: &mut Rates, name: &str, bytes: &[u8]) -> Result<(), ()> {
+    fn apply_file(&self, rates: &mut Rates, name: &str, bytes: &[u8]) -> Option<()> {
         if let Some(rest) = name
             .strip_prefix("monthly_xml_")
             .and_then(|r| r.strip_suffix(".xml"))
         {
-            let key = parse_period_name(rest).ok_or(())?;
-            let ((y, m), raw) = parse::parse_monthly_xml(bytes).map_err(|_| ())?;
-            if Month::new(y, m).map(Month::key) != Some(key) {
-                return Err(());
-            }
-            let entries = dedup(raw).map_err(|_| ())?;
-            rates.set_period(RateType::Monthly, key, entries);
-            return Ok(());
+            let month: Month = rest.parse().ok()?;
+            let entries = validated_monthly(bytes, month).ok()?;
+            rates.set_period(RateType::Monthly, month.key(), entries);
+            return Some(());
         }
         for (rate_type, prefix) in [
             (RateType::Spot, "spot_csv_"),
@@ -265,20 +251,13 @@ impl Updater {
                 .strip_prefix(prefix)
                 .and_then(|r| r.strip_suffix(".csv"))
             {
-                let key = parse_period_name(rest).ok_or(())?;
-                let month = Month::from_key(key);
-                let year_end = match month.month() {
-                    3 => YearEnd::march(month.year()),
-                    12 => YearEnd::december(month.year()),
-                    _ => return Err(()),
-                };
-                let raw = parse::parse_rates_csv(bytes).map_err(|_| ())?;
-                let entries = dedup(raw).map_err(|_| ())?;
+                let year_end = YearEnd::from_month(rest.parse().ok()?)?;
+                let entries = dedup(parse::parse_rates_csv(bytes).ok()?).ok()?;
                 rates.set_period(rate_type, year_end.key(), entries);
-                return Ok(());
+                return Some(());
             }
         }
-        Err(())
+        None
     }
 
     /// Atomic best-effort cache write; failure only costs a refetch next run.
@@ -328,10 +307,13 @@ fn dedup(raw: Vec<ParsedRate>) -> Result<Vec<Entry>, parse::ParseError> {
         .collect())
 }
 
-/// "YYYY-MM" -> month key.
-fn parse_period_name(s: &str) -> Option<i32> {
-    let (y, m) = s.split_once('-')?;
-    Some(Month::new(y.parse().ok()?, m.parse().ok()?)?.key())
+/// Parse, period-check and dedup one monthly XML payload.
+fn validated_monthly(bytes: &[u8], expected: Month) -> Result<Vec<Entry>, parse::ParseError> {
+    let ((y, m), raw) = parse::parse_monthly_xml(bytes)?;
+    if Month::new(y, m) != Some(expected) {
+        return Err(parse::ParseError("period mismatch".into()));
+    }
+    dedup(raw)
 }
 
 /// The first period missing from an ascending run, or `None` for an empty series.
@@ -359,7 +341,7 @@ fn next_year_end(period: YearEnd) -> YearEnd {
 
 fn end_of_month(period: YearEnd) -> chrono::NaiveDate {
     let month = period.end_month();
-    let last_day = crate::date::days_in_month(period.year(), month.month());
+    let last_day = parse::date::days_in_month(period.year(), month.month());
     chrono::NaiveDate::from_ymd_opt(period.year(), month.month(), last_day).unwrap_or_default()
 }
 

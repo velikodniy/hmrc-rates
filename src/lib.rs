@@ -38,7 +38,6 @@
 
 extern crate alloc;
 
-mod date;
 mod error;
 mod rate;
 mod rates;
@@ -49,7 +48,6 @@ mod types;
 mod bundled;
 
 #[cfg(any(feature = "http", all(test, feature = "std")))]
-#[allow(clippy::duplicate_mod)] // parse.rs carries its own date.rs copy for build.rs
 mod parse;
 
 #[cfg(feature = "http")]
@@ -58,7 +56,7 @@ mod http;
 pub use error::LookupError;
 pub use rate::Rate;
 pub use rates::{Rates, Table};
-pub use types::{Currency, Month, Period, RateType, YearEnd};
+pub use types::{Currency, Month, ParseMonthError, Period, RateType, YearEnd};
 
 #[cfg(feature = "http")]
 pub use http::{FetchError, Updater};

@@ -64,6 +64,33 @@ impl fmt::Display for Month {
     }
 }
 
+/// The error returned when parsing a [`Month`] from a string fails.
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub struct ParseMonthError;
+
+impl fmt::Display for ParseMonthError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("invalid month, expected YYYY-MM")
+    }
+}
+
+impl core::error::Error for ParseMonthError {}
+
+/// Parses `"YYYY-MM"` (the [`Display`](fmt::Display) form).
+impl core::str::FromStr for Month {
+    type Err = ParseMonthError;
+
+    fn from_str(s: &str) -> Result<Month, ParseMonthError> {
+        // rsplit: a leading minus sign belongs to a negative year.
+        let (y, m) = s.rsplit_once('-').ok_or(ParseMonthError)?;
+        let parsed = Month::new(
+            y.parse().map_err(|_| ParseMonthError)?,
+            m.parse().map_err(|_| ParseMonthError)?,
+        );
+        parsed.ok_or(ParseMonthError)
+    }
+}
+
 /// A spot/average rate period: HMRC publishes these only for years ending
 /// 31 March or 31 December, so other dates are unrepresentable.
 ///
@@ -93,6 +120,15 @@ impl YearEnd {
         YearEnd {
             year,
             december: true,
+        }
+    }
+
+    /// The period ending in `month` — `None` unless it is a March or December.
+    pub fn from_month(month: Month) -> Option<YearEnd> {
+        match month.month() {
+            3 => Some(YearEnd::march(month.year())),
+            12 => Some(YearEnd::december(month.year())),
+            _ => None,
         }
     }
 
@@ -250,13 +286,8 @@ mod serde_impls {
     impl<'de> Deserialize<'de> for Month {
         fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Month, D::Error> {
             let s = String::deserialize(deserializer)?;
-            let parse = || {
-                // rsplit: a leading minus sign belongs to a negative year.
-                let (y, m) = s.rsplit_once('-')?;
-                Month::new(y.parse().ok()?, m.parse().ok()?)
-            };
-            parse()
-                .ok_or_else(|| D::Error::custom(format!("invalid month '{s}', expected YYYY-MM")))
+            s.parse()
+                .map_err(|_| D::Error::custom(format!("invalid month '{s}', expected YYYY-MM")))
         }
     }
 
@@ -270,13 +301,11 @@ mod serde_impls {
     impl<'de> Deserialize<'de> for YearEnd {
         fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<YearEnd, D::Error> {
             let month = Month::deserialize(deserializer)?;
-            match month.month() {
-                3 => Ok(YearEnd::march(month.year())),
-                12 => Ok(YearEnd::december(month.year())),
-                _ => Err(D::Error::custom(format!(
+            YearEnd::from_month(month).ok_or_else(|| {
+                D::Error::custom(format!(
                     "invalid year end '{month}', expected March or December"
-                ))),
-            }
+                ))
+            })
         }
     }
 

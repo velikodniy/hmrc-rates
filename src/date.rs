@@ -1,7 +1,8 @@
-// Shared by build.rs via #[path]; must stay dependency-free and crate-path-free.
+// Compiled as parse.rs's submodule (shared with build.rs); the library proper
+// uses chrono for calendar math.
 
 /// Days since 1970-01-01 for a proleptic Gregorian date (Howard Hinnant's algorithm).
-#[allow(dead_code)] // used by the crate::date instantiation, not the parse.rs one
+#[allow(dead_code)] // used by the build.rs instantiation only
 pub fn days_from_civil(year: i32, month: u32, day: u32) -> i32 {
     let y = i64::from(year) - i64::from(month <= 2);
     let era = if y >= 0 { y } else { y - 399 } / 400;
@@ -13,7 +14,6 @@ pub fn days_from_civil(year: i32, month: u32, day: u32) -> i32 {
 }
 
 /// The number of days in a month (proleptic Gregorian).
-#[allow(dead_code)] // used by the parse.rs instantiation, not the crate::date one
 pub fn days_in_month(year: i32, month: u32) -> u32 {
     match month {
         1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,

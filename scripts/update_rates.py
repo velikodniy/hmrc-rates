@@ -7,6 +7,7 @@ Emits GitHub Actions outputs on stdout: has-new, release-body, downloaded, skipp
 
 import argparse
 import calendar
+import datetime
 import json
 import pathlib
 import re
@@ -42,8 +43,15 @@ def get_json(url: str) -> dict | None:
     return json.loads(data) if data else None
 
 
-def discover_files(rate_type: str) -> dict[tuple[int, int], str]:
-    """Map (year, month) -> API file path, across all published years."""
+def year_complete(rate_type: str, target_dir: pathlib.Path, year: int) -> bool:
+    """Every file the year can ever have exists locally (past years only)."""
+    fmt, _ = SERIES[rate_type]
+    months = range(1, 13) if rate_type == "monthly" else (3, 12)
+    return all((target_dir / f"{year}-{m:02d}.{fmt}").exists() for m in months)
+
+
+def discover_files(rate_type: str, target_dir: pathlib.Path) -> dict[tuple[int, int], str]:
+    """Map (year, month) -> API file path, skipping locally complete past years."""
     fmt, _ = SERIES[rate_type]
     doc = get_json(f"{API}/period_lists?filter%5Btype%5D={rate_type}")
     if doc is None:
@@ -52,8 +60,11 @@ def discover_files(rate_type: str) -> dict[tuple[int, int], str]:
         int(y["id"].split("-", 1)[0])
         for y in doc["data"]["relationships"]["exchange_rate_years"]["data"]
     ]
+    this_year = datetime.datetime.now(tz=datetime.UTC).year
     found: dict[tuple[int, int], str] = {}
     for year in years:
+        if year < this_year and year_complete(rate_type, target_dir, year):
+            continue
         ydoc = get_json(f"{API}/period_lists?filter%5Btype%5D={rate_type}&year={year}")
         if ydoc is None:
             continue
@@ -76,10 +87,13 @@ def update_series(rate_type: str, data_dir: pathlib.Path, verbose: bool):
     target_dir = data_dir / subdir
     target_dir.mkdir(parents=True, exist_ok=True)
 
+    now = datetime.datetime.now(tz=datetime.UTC)
     downloaded, skipped, failed = [], 0, 0
-    for (year, month), path in sorted(discover_files(rate_type).items()):
+    for (year, month), path in sorted(discover_files(rate_type, target_dir).items()):
         target = target_dir / f"{year}-{month:02d}.{fmt}"
-        if target.exists():
+        # Current/next monthly files may be amended in place: re-fetch and diff.
+        amendable = rate_type == "monthly" and (year, month) >= (now.year, now.month)
+        if target.exists() and not amendable:
             skipped += 1
             continue
         payload = fetch(HOST + path)
@@ -87,6 +101,9 @@ def update_series(rate_type: str, data_dir: pathlib.Path, verbose: bool):
             failed += 1
             if verbose:
                 print(f"failed {rate_type} {year}-{month:02d}", file=sys.stderr)
+            continue
+        if target.exists() and target.read_bytes() == payload:
+            skipped += 1
             continue
         target.write_bytes(payload)
         downloaded.append((rate_type, year, month))
