@@ -1,0 +1,104 @@
+# Builds abi3 wheels for the python/ binding crate on every PR and tag;
+# tag pushes also publish to PyPI via OIDC trusted publishing (no token).
+name: Wheels
+on:
+  push:
+    tags: ["v*.*.*"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: linux-x86_64
+            os: ubuntu-latest
+            target: x86_64
+            manylinux: auto
+            python-version: "3.10" # oldest supported: proves the abi3-py310 wheel loads there
+          - id: linux-aarch64
+            os: ubuntu-24.04-arm
+            target: aarch64
+            manylinux: auto
+            python-version: "3.12"
+          - id: musllinux-x86_64
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            manylinux: musllinux_1_2
+            skip-test: true # a glibc runner cannot import a musl wheel
+          - id: macos-universal2
+            os: macos-latest
+            target: universal2-apple-darwin
+            python-version: "3.10"
+          - id: windows-x64
+            os: windows-latest
+            target: x64
+            python-version: "3.10"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        if: ${{ !matrix.skip-test }}
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: PyO3/maturin-action@v1
+        with:
+          working-directory: python
+          target: ${{ matrix.target }}
+          manylinux: ${{ matrix.manylinux || 'auto' }}
+          args: --release --out dist
+      - name: Test wheel
+        if: ${{ !matrix.skip-test }}
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip pytest
+          python -m pip install hmrc-rates --no-index --find-links python/dist
+          python -m pytest python/tests
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.id }}
+          path: python/dist
+
+  sdist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: PyO3/maturin-action@v1
+        with:
+          working-directory: python
+          command: sdist
+          args: --out dist
+      - name: Verify sdist builds from source
+        run: |
+          python3 -m venv venv
+          venv/bin/pip install python/dist/*.tar.gz
+          venv/bin/python -c "import hmrc_rates; print(hmrc_rates.__version__)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-sdist
+          path: python/dist
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build, sdist]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/hmrc-rates/
+    permissions:
+      id-token: write # OIDC trusted publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          path: dist
+          merge-multiple: true
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist
