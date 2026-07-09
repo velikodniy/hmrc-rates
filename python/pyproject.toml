@@ -1,0 +1,35 @@
+[build-system]
+requires = ["maturin>=1.9,<2"]
+build-backend = "maturin"
+
+[project]
+name = "hmrc-rates"
+description = "Official HMRC exchange rates (monthly, spot, yearly average, weekly) with bundled history and exact GBP conversion"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+keywords = ["hmrc", "exchange-rate", "currency", "gbp", "tax"]
+classifiers = [
+  "Programming Language :: Rust",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Intended Audience :: Developers",
+  "Topic :: Office/Business :: Financial",
+  "Operating System :: OS Independent",
+  "Typing :: Typed",
+]
+dynamic = ["version"]
+
+[project.urls]
+Repository = "https://github.com/velikodniy/hmrc-rates"
+Changelog = "https://github.com/velikodniy/hmrc-rates/releases"
+
+[tool.maturin]
+module-name = "hmrc_rates"
+features = ["pyo3/extension-module"]
+strip = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["network: hits the live HMRC endpoint"]
+addopts = "-m 'not network'"

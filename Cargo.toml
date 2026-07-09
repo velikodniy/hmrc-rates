@@ -1,15 +1,37 @@
-[package]
-name = "hmrc-rates"
+[workspace]
+members = ["python"]
+
+[workspace.package]
 version = "0.2.0"
 edition = "2024"
 rust-version = "1.85"
-description = "HMRC exchange rates (monthly, spot, yearly average, weekly) with bundled history and GBP conversion."
 license = "MIT"
 homepage = "https://github.com/velikodniy/hmrc-rates"
 repository = "https://github.com/velikodniy/hmrc-rates"
+
+[workspace.dependencies]
+chrono = { version = "0.4", default-features = false }
+rust_decimal = { version = "1.36", default-features = false }
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+
+[package]
+name = "hmrc-rates"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "HMRC exchange rates (monthly, spot, yearly average, weekly) with bundled history and GBP conversion."
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
 keywords = ["hmrc", "exchange-rate", "currency", "gbp", "tax"]
 categories = ["finance", "internationalization"]
-include = ["src/**", "data/**", "build.rs", "docs/**", "README.md", "LICENSE"]
+include = ["src/**", "data/**", "examples/**", "build.rs", "docs/**", "README.md", "LICENSE"]
 
 [features]
 default = ["std", "bundled"]
@@ -20,8 +42,8 @@ serde = ["dep:serde", "rust_decimal/serde", "chrono/serde"]
 cli = ["http", "dep:clap"]
 
 [dependencies]
-chrono = { version = "0.4", default-features = false }
-rust_decimal = { version = "1.36", default-features = false }
+chrono = { workspace = true }
+rust_decimal = { workspace = true }
 thiserror = { version = "2", default-features = false }
 ureq = { version = "3", optional = true }
 etcetera = { version = "0.8", optional = true }
@@ -47,12 +69,8 @@ name = "hmrc-rates"
 path = "src/bin/hmrc-rates.rs"
 required-features = ["cli"]
 
-[lints.clippy]
-unwrap_used = "deny"
-expect_used = "deny"
-panic = "deny"
-todo = "deny"
-unimplemented = "deny"
+[lints]
+workspace = true
 
 [[example]]
 name = "fresh"
