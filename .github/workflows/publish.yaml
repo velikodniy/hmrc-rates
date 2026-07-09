@@ -1,3 +1,4 @@
+# Publish to crates.io when a new tag is pushed
 name: Publish
 on:
   push:

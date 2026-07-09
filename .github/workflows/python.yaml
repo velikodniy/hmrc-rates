@@ -1,5 +1,5 @@
-# Builds abi3 wheels for the python/ binding crate on every PR and tag;
-# tag pushes also publish to PyPI via OIDC trusted publishing (no token).
+# Builds wheels for the Python binding
+# Tag pushes also publish to PyPI
 name: Wheels
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
             os: ubuntu-latest
             target: x86_64
             manylinux: auto
-            python-version: "3.10" # oldest supported: proves the abi3-py310 wheel loads there
+            python-version: "3.10"
           - id: linux-aarch64
             os: ubuntu-24.04-arm
             target: aarch64

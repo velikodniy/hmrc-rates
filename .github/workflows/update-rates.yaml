@@ -1,5 +1,4 @@
-# Daily check for new HMRC rate files; commits, bumps the patch version and
-# tags — the Publish workflow then releases to crates.io on the tag push.
+# Daily check for new HMRC rate files
 # HMRC publishes monthly rates on the penultimate Thursday of each month.
 name: Update rates
 on:
@@ -14,8 +13,6 @@ jobs:
     permissions:
       contents: write
     steps:
-      # RELEASE_TOKEN (fine-grained PAT): pushes made with the default
-      # GITHUB_TOKEN do not trigger the tag-driven Publish/Wheels workflows.
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
