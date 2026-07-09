@@ -5,7 +5,7 @@ use hmrc_rates::{RateType, Rates, Updater, YearEnd, YearMonth};
 use rust_decimal::Decimal;
 
 #[derive(Parser)]
-#[command(name = "hmrc-rates", version, about = "Official HMRC exchange rates")]
+#[command(name = "hmrc-rates", version, about = "HMRC exchange rates")]
 struct Cli {
     /// Fetch the latest rates from HMRC before answering (cached on disk).
     #[arg(long, global = true)]

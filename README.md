@@ -4,8 +4,7 @@
 [![docs.rs](https://img.shields.io/docsrs/hmrc-rates)](https://docs.rs/hmrc-rates)
 [![PyPI](https://img.shields.io/pypi/v/hmrc-rates.svg)](https://pypi.org/project/hmrc-rates/)
 
-An independent Rust library for the exchange rates published by HMRC, the UK tax authority — the monthly, spot, yearly-average and weekly rates used to convert foreign-currency amounts to GBP.
-This project is not affiliated with, endorsed by, or maintained by HMRC; only the underlying rate data comes from them.
+HMRC exchange rates as a Rust library.
 The full published history is compiled into your binary (~450 KB of read-only data), so `Rates::new()` is free and infallible — no parsing, no I/O, no startup cost.
 Conversions use exact `rust_decimal` arithmetic and are never rounded.
 
@@ -119,3 +118,8 @@ See [python/README.md](python/README.md) for the full Python API.
 ## MSRV and licence
 
 Rust 1.85. Licensed under [MIT](LICENSE).
+
+## Disclaimer
+
+This project is not affiliated with, endorsed by, or maintained by HMRC.
+Only the underlying rate data comes from HMRC.

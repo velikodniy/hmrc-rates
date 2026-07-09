@@ -686,7 +686,7 @@ impl PyUpdater {
     }
 }
 
-/// Official HMRC exchange rates with bundled history and exact GBP conversion.
+/// HMRC exchange rates with bundled history and exact GBP conversion.
 #[pymodule(name = "hmrc_rates")]
 fn hmrc_rates_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyRates>()?;

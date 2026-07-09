@@ -1,4 +1,4 @@
-//! Official HMRC exchange rates with bundled history and exact GBP conversion.
+//! HMRC exchange rates with bundled history and exact GBP conversion.
 //!
 //! One [`Rates`] value holds all four series HMRC has published:
 //! monthly customs/VAT rates (from 2014-02),

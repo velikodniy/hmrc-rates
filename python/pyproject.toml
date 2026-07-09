@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "hmrc-rates"
-description = "Official HMRC exchange rates (monthly, spot, yearly average, weekly) with bundled history and exact GBP conversion"
+description = "HMRC exchange rates (monthly, spot, yearly average, weekly) with bundled history and exact GBP conversion"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
