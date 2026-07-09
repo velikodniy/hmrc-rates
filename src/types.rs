@@ -124,7 +124,7 @@ impl YearEnd {
     }
 
     /// The period ending in `year_month` — `None` unless it is a March or December.
-    pub fn from_month(year_month: YearMonth) -> Option<YearEnd> {
+    pub fn from_year_month(year_month: YearMonth) -> Option<YearEnd> {
         match year_month.month() {
             3 => Some(YearEnd::march(year_month.year())),
             12 => Some(YearEnd::december(year_month.year())),
@@ -143,7 +143,7 @@ impl YearEnd {
     }
 
     /// The month the period ends in (March or December of [`YearEnd::year`]).
-    pub fn end_month(self) -> YearMonth {
+    pub fn end_year_month(self) -> YearMonth {
         let month = if self.december { 12 } else { 3 };
         // Saturating: absurd years stay panic-free and match no stored period
         YearMonth(self.year.saturating_mul(12).saturating_add(month - 1))
@@ -251,7 +251,7 @@ impl fmt::Display for RateType {
 #[non_exhaustive]
 pub enum Period {
     /// A calendar month (monthly series).
-    Month(YearMonth),
+    YearMonth(YearMonth),
     /// A year ending 31 March or 31 December (spot and average series).
     YearEnd(YearEnd),
     /// An inclusive weekly-amendment validity range.
@@ -261,7 +261,7 @@ pub enum Period {
 impl fmt::Display for Period {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Period::Month(m) => m.fmt(f),
+            Period::YearMonth(m) => m.fmt(f),
             Period::YearEnd(ye) => ye.fmt(f),
             Period::Week { start, end } => write!(f, "week {start} to {end}"),
         }
@@ -300,10 +300,10 @@ mod serde_impls {
 
     impl<'de> Deserialize<'de> for YearEnd {
         fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<YearEnd, D::Error> {
-            let month = YearMonth::deserialize(deserializer)?;
-            YearEnd::from_month(month).ok_or_else(|| {
+            let year_month = YearMonth::deserialize(deserializer)?;
+            YearEnd::from_year_month(year_month).ok_or_else(|| {
                 D::Error::custom(format!(
-                    "invalid year end '{month}', expected March or December"
+                    "invalid year end '{year_month}', expected March or December"
                 ))
             })
         }
@@ -356,7 +356,7 @@ mod tests {
         assert!(YearEnd::march(2025) < YearEnd::december(2025));
         assert!(YearEnd::december(2024) < YearEnd::march(2025));
         assert_eq!(
-            YearEnd::march(2026).end_month(),
+            YearEnd::march(2026).end_year_month(),
             YearMonth::new(2026, 3).unwrap()
         );
         assert_eq!(

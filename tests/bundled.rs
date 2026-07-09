@@ -95,7 +95,7 @@ fn gbp_identity_everywhere() {
     // The fallback never substitutes a month for GBP: £1 = £1 as requested
     let next = rates.months().next_back().unwrap().next();
     let rate = rates.monthly_rate_or_earlier("GBP", next, 5).unwrap();
-    assert_eq!(rate.period(), Period::Month(next));
+    assert_eq!(rate.period(), Period::YearMonth(next));
 }
 
 #[test]
@@ -107,7 +107,7 @@ fn fallback_walks_back_and_reveals_period() {
     assert!(rates.monthly_rate("USD", next).is_err());
     // ...the explicit fallback resolves to the last month and says so
     let rate = rates.monthly_rate_or_earlier("USD", next, 1).unwrap();
-    assert_eq!(rate.period(), Period::Month(last));
+    assert_eq!(rate.period(), Period::YearMonth(last));
     // A zero-step fallback stays strict
     assert!(rates.monthly_rate_or_earlier("USD", next, 0).is_err());
     // Exhausted window is an error for the requested month

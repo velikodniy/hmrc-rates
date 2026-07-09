@@ -152,7 +152,7 @@ impl Updater {
                 .last()
                 .map_or(first_missing, |n| first_missing.min(*n));
             loop {
-                let end = period.end_month();
+                let end = period.end_year_month();
                 if YearMonth::from(today) < end {
                     break; // not due yet
                 }
@@ -244,9 +244,9 @@ impl Updater {
             .strip_prefix("monthly_xml_")
             .and_then(|r| r.strip_suffix(".xml"))
         {
-            let month: YearMonth = rest.parse().ok()?;
-            let entries = validated_monthly(bytes, month).ok()?;
-            rates.set_period(RateType::Monthly, month.key(), entries);
+            let year_month: YearMonth = rest.parse().ok()?;
+            let entries = validated_monthly(bytes, year_month).ok()?;
+            rates.set_period(RateType::Monthly, year_month.key(), entries);
             return Some(());
         }
         for (rate_type, prefix) in [
@@ -257,7 +257,7 @@ impl Updater {
                 .strip_prefix(prefix)
                 .and_then(|r| r.strip_suffix(".csv"))
             {
-                let year_end = YearEnd::from_month(rest.parse().ok()?)?;
+                let year_end = YearEnd::from_year_month(rest.parse().ok()?)?;
                 let entries = dedup(parse::parse_rates_csv(bytes).ok()?).ok()?;
                 rates.set_period(rate_type, year_end.key(), entries);
                 return Some(());
@@ -347,9 +347,9 @@ fn next_year_end(period: YearEnd) -> YearEnd {
 }
 
 fn end_of_month(period: YearEnd) -> chrono::NaiveDate {
-    let month = period.end_month();
-    let last_day = parse::date::days_in_month(period.year(), month.month());
-    chrono::NaiveDate::from_ymd_opt(period.year(), month.month(), last_day).unwrap_or_default()
+    let year_month = period.end_year_month();
+    let last_day = parse::date::days_in_month(period.year(), year_month.month());
+    chrono::NaiveDate::from_ymd_opt(period.year(), year_month.month(), last_day).unwrap_or_default()
 }
 
 #[cfg(test)]

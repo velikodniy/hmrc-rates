@@ -148,7 +148,7 @@ impl Rates {
     /// let next = rates.months().next_back().unwrap().next(); // not published yet
     /// assert!(rates.monthly_rate("USD", next).is_err()); // strict lookup fails
     /// let rate = rates.monthly_rate_or_earlier("USD", next, 1)?;
-    /// assert_ne!(rate.period(), Period::Month(next)); // the substitution is visible
+    /// assert_ne!(rate.period(), Period::YearMonth(next)); // the substitution is visible
     /// # Ok::<(), hmrc_rates::LookupError>(())
     /// ```
     pub fn monthly_rate_or_earlier(
@@ -159,7 +159,7 @@ impl Rates {
     ) -> Result<Rate, LookupError> {
         let requested = year_month.into();
         // GBP resolves for the requested month itself — no substitution
-        if let Some(rate) = gbp_identity(code, Period::Month(requested)) {
+        if let Some(rate) = gbp_identity(code, Period::YearMonth(requested)) {
             return Ok(rate);
         }
         let mut candidate = requested;
@@ -169,13 +169,13 @@ impl Rates {
             }
             candidate = candidate.prev();
         }
-        Err(self.period_missing(RateType::Monthly, Period::Month(requested)))
+        Err(self.period_missing(RateType::Monthly, Period::YearMonth(requested)))
     }
 
     /// The whole monthly table for one month.
     pub fn monthly(&self, year_month: impl Into<YearMonth>) -> Result<Table<'_>, LookupError> {
         let year_month = year_month.into();
-        let period = Period::Month(year_month);
+        let period = Period::YearMonth(year_month);
         match self.monthly.table(year_month.key()) {
             Some(entries) => Ok(Table {
                 rate_type: RateType::Monthly,
@@ -315,8 +315,8 @@ impl Rates {
         match table {
             RateType::Monthly => self.monthly.first_last().map(|(f, l)| {
                 (
-                    Period::Month(YearMonth::from_key(f)),
-                    Period::Month(YearMonth::from_key(l)),
+                    Period::YearMonth(YearMonth::from_key(f)),
+                    Period::YearMonth(YearMonth::from_key(l)),
                 )
             }),
             RateType::Spot | RateType::Average => {
@@ -474,9 +474,9 @@ mod empty_tests {
     #[test]
     fn empty_rates_report_no_data_loaded() {
         let rates = Rates::empty();
-        let month = YearMonth::new(2025, 8);
-        let Some(month) = month else { return };
-        let result = rates.monthly_rate("USD", month);
+        let year_month = YearMonth::new(2025, 8);
+        let Some(year_month) = year_month else { return };
+        let result = rates.monthly_rate("USD", year_month);
         assert!(
             matches!(
                 result,
@@ -490,7 +490,7 @@ mod empty_tests {
         assert!(rates.months().next().is_none());
         assert_eq!(rates.currencies(RateType::Spot).count(), 0);
         // GBP identity still holds with no data at all
-        assert!(rates.monthly_rate("GBP", month).is_ok());
+        assert!(rates.monthly_rate("GBP", year_month).is_ok());
     }
 }
 

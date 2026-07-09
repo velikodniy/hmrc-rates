@@ -53,15 +53,15 @@ def test_lookup_is_case_insensitive():
 def test_monthly_rate_or_earlier_reveals_substitution():
     newest = rates.months()[-1]
     rate = rates.monthly_rate_or_earlier("USD", newest.next(), 1)
-    assert rate.period.month == newest
+    assert rate.period.year_month == newest
 
 
 def test_monthly_table():
     table = rates.monthly(YearMonth(2025, 8))
     assert len(table) > 100
     assert table.rate_type == RateType.MONTHLY
-    assert table.period.kind == "month"
-    assert table.period.month == YearMonth(2025, 8)
+    assert table.period.kind == "year_month"
+    assert table.period.year_month == YearMonth(2025, 8)
     entries = dict(table)
     assert len(entries) == len(table)
     currency, rate = next(iter(table))

@@ -32,13 +32,13 @@ def test_year_end():
     march = YearEnd.march(2026)
     assert march.is_march
     assert march.year == 2026
-    assert march.end_month() == YearMonth(2026, 3)
+    assert march.end_year_month() == YearMonth(2026, 3)
     assert str(march) == "year ending 2026-03-31"
     december = YearEnd.december(2025)
     assert not december.is_march
     assert december < march
-    assert YearEnd.from_month(YearMonth(2025, 12)) == december
-    assert YearEnd.from_month(YearMonth(2025, 5)) is None
+    assert YearEnd.from_year_month(YearMonth(2025, 12)) == december
+    assert YearEnd.from_year_month(YearMonth(2025, 5)) is None
 
 
 def test_currency():

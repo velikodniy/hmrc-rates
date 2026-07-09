@@ -167,8 +167,8 @@ impl PyYearEnd {
 
     /// The period ending in `year_month` — `None` unless it is a March or December.
     #[staticmethod]
-    fn from_month(year_month: PyYearMonth) -> Option<Self> {
-        hmrc_rates::YearEnd::from_month(year_month.0).map(PyYearEnd)
+    fn from_year_month(year_month: PyYearMonth) -> Option<Self> {
+        hmrc_rates::YearEnd::from_year_month(year_month.0).map(PyYearEnd)
     }
 
     #[getter]
@@ -182,8 +182,8 @@ impl PyYearEnd {
     }
 
     /// The month the period ends in.
-    fn end_month(&self) -> PyYearMonth {
-        PyYearMonth(self.0.end_month())
+    fn end_year_month(&self) -> PyYearMonth {
+        PyYearMonth(self.0.end_year_month())
     }
 
     fn __repr__(&self) -> String {
@@ -301,11 +301,11 @@ impl std::fmt::Display for PyPeriod {
 
 #[pymethods]
 impl PyPeriod {
-    /// `"month"`, `"year_end"` or `"week"`.
+    /// `"year_month"`, `"year_end"` or `"week"`.
     #[getter]
     fn kind(&self) -> PyResult<&'static str> {
         match self.0 {
-            hmrc_rates::Period::Month(_) => Ok("month"),
+            hmrc_rates::Period::YearMonth(_) => Ok("year_month"),
             hmrc_rates::Period::YearEnd(_) => Ok("year_end"),
             hmrc_rates::Period::Week { .. } => Ok("week"),
             _ => Err(PyRuntimeError::new_err("unknown period kind")),
@@ -313,9 +313,9 @@ impl PyPeriod {
     }
 
     #[getter]
-    fn month(&self) -> Option<PyYearMonth> {
+    fn year_month(&self) -> Option<PyYearMonth> {
         match self.0 {
-            hmrc_rates::Period::Month(m) => Some(PyYearMonth(m)),
+            hmrc_rates::Period::YearMonth(m) => Some(PyYearMonth(m)),
             _ => None,
         }
     }
@@ -352,15 +352,15 @@ impl PyPeriod {
 /// A month given as `YearMonth`, `datetime.date`, or a `"YYYY-MM"` string.
 #[derive(FromPyObject)]
 enum YearMonthArg {
-    Month(PyYearMonth),
+    YearMonth(PyYearMonth),
     Date(NaiveDate),
     Str(String),
 }
 
 impl YearMonthArg {
-    fn into_month(self) -> PyResult<hmrc_rates::YearMonth> {
+    fn into_year_month(self) -> PyResult<hmrc_rates::YearMonth> {
         match self {
-            YearMonthArg::Month(m) => Ok(m.0),
+            YearMonthArg::YearMonth(m) => Ok(m.0),
             YearMonthArg::Date(d) => Ok(d.into()),
             YearMonthArg::Str(s) => s.parse().map_err(|_| {
                 PyValueError::new_err(format!("invalid month '{s}', expected YYYY-MM"))
@@ -450,7 +450,7 @@ impl PyRate {
 
 #[derive(Copy, Clone)]
 enum TableKey {
-    Month(hmrc_rates::YearMonth),
+    YearMonth(hmrc_rates::YearMonth),
     Spot(hmrc_rates::YearEnd),
     Average(hmrc_rates::YearEnd),
     Week(NaiveDate),
@@ -484,7 +484,7 @@ impl PyTable {
         key: TableKey,
     ) -> Result<hmrc_rates::Table<'_>, hmrc_rates::LookupError> {
         match key {
-            TableKey::Month(m) => rates.monthly(m),
+            TableKey::YearMonth(m) => rates.monthly(m),
             TableKey::Spot(p) => rates.spot(p),
             TableKey::Average(p) => rates.average(p),
             TableKey::Week(d) => rates.weekly(d),
@@ -576,7 +576,7 @@ impl PyRates {
     /// The monthly rate for `code` in `year_month` (a `YearMonth`, `datetime.date`, or `"YYYY-MM"`).
     fn monthly_rate(&self, code: &str, year_month: YearMonthArg) -> PyResult<PyRate> {
         self.inner
-            .monthly_rate(code, year_month.into_month()?)
+            .monthly_rate(code, year_month.into_year_month()?)
             .map(PyRate)
             .map_err(lookup_err)
     }
@@ -589,14 +589,17 @@ impl PyRates {
         max_months_back: u32,
     ) -> PyResult<PyRate> {
         self.inner
-            .monthly_rate_or_earlier(code, year_month.into_month()?, max_months_back)
+            .monthly_rate_or_earlier(code, year_month.into_year_month()?, max_months_back)
             .map(PyRate)
             .map_err(lookup_err)
     }
 
     /// The full monthly table for a month.
     fn monthly(&self, year_month: YearMonthArg) -> PyResult<PyTable> {
-        PyTable::build(&self.inner, TableKey::Month(year_month.into_month()?))
+        PyTable::build(
+            &self.inner,
+            TableKey::YearMonth(year_month.into_year_month()?),
+        )
     }
 
     /// The spot table for a year end.

@@ -57,10 +57,10 @@ fn period_and_rate_roundtrip() {
     assert_eq!(back, rate);
     assert_eq!(back.units_per_gbp(), rate.units_per_gbp());
 
-    let period = Period::Month(YearMonth::new(2025, 8).unwrap());
+    let period = Period::YearMonth(YearMonth::new(2025, 8).unwrap());
     assert_eq!(
         serde_json::to_string(&period).unwrap(),
-        r#"{"month":"2025-08"}"#
+        r#"{"year_month":"2025-08"}"#
     );
     assert_eq!(roundtrip(&period), period);
 

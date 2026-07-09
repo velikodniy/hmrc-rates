@@ -63,7 +63,7 @@ impl From<Series> for RateType {
 }
 
 fn year_end(year_month: YearMonth) -> Result<YearEnd, String> {
-    YearEnd::from_month(year_month)
+    YearEnd::from_year_month(year_month)
         .ok_or_else(|| format!("'{year_month}' is not a spot/average period (use MM = 03 or 12)"))
 }
 
