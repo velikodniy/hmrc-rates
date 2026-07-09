@@ -113,7 +113,7 @@ See [python/README.md](python/README.md) for the full Python API.
 
 - API reference: [docs.rs/hmrc-rates](https://docs.rs/hmrc-rates)
 - Data provenance: [docs/data-sources.md](docs/data-sources.md)
-- Runnable examples: [`examples/convert.rs`](examples/convert.rs), [`examples/fresh.rs`](examples/fresh.rs) (`--features http`)
+- Runnable examples: [`examples/convert.rs`](examples/convert.rs), [`examples/fresh.rs`](examples/fresh.rs)
 
 ## MSRV and licence
 
