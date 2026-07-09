@@ -1,6 +1,7 @@
 # hmrc-rates
 
-Official HMRC exchange rates for Python, backed by the [`hmrc-rates`](https://crates.io/crates/hmrc-rates) Rust crate.
+An independent Python library for the exchange rates published by HMRC, the UK tax authority, backed by the [`hmrc-rates`](https://crates.io/crates/hmrc-rates) Rust crate.
+This project is not affiliated with, endorsed by, or maintained by HMRC; only the underlying rate data comes from them.
 The full published history ships inside the wheel, so `Rates()` is free and needs no network, parsing or I/O.
 All money values are `decimal.Decimal` and conversions are exact — the library never rounds.
 
