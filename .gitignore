@@ -1,13 +1,6 @@
 /target
-
-
-# Added by cargo
-#
-# already existing elements were commented out
-
-#/target
 .backfill-cache/
-scripts/__pycache__/
+
 __pycache__/
 .pytest_cache/
 python/.venv/
