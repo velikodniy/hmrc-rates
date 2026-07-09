@@ -50,7 +50,9 @@ def year_complete(rate_type: str, target_dir: pathlib.Path, year: int) -> bool:
     return all((target_dir / f"{year}-{m:02d}.{fmt}").exists() for m in months)
 
 
-def discover_files(rate_type: str, target_dir: pathlib.Path) -> dict[tuple[int, int], str]:
+def discover_files(
+    rate_type: str, target_dir: pathlib.Path
+) -> dict[tuple[int, int], str]:
     """Map (year, month) -> API file path, skipping locally complete past years."""
     fmt, _ = SERIES[rate_type]
     doc = get_json(f"{API}/period_lists?filter%5Btype%5D={rate_type}")
@@ -73,7 +75,9 @@ def discover_files(rate_type: str, target_dir: pathlib.Path) -> dict[tuple[int, 
                 continue
             m = FILE_RE.search(inc["attributes"]["file_path"])
             if m and m.group(1) == rate_type and m.group(2) == fmt:
-                found[(int(m.group(3)), int(m.group(4)))] = inc["attributes"]["file_path"]
+                found[(int(m.group(3)), int(m.group(4)))] = inc["attributes"][
+                    "file_path"
+                ]
     return found
 
 

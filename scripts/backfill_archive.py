@@ -29,9 +29,15 @@ CANONICAL_HEADER = [
 
 # (timestamp, original URL) per archived source; timestamps are nearest-capture hints.
 MONTHLY_2014 = {
-    "2014-02": ("20140603104805", "http://www.hmrc.gov.uk/softwaredevelopers/rates/exrates_monthly_0214.XML"),
+    "2014-02": (
+        "20140603104805",
+        "http://www.hmrc.gov.uk/softwaredevelopers/rates/exrates_monthly_0214.XML",
+    ),
     **{
-        f"2014-{m:02d}": ("20151202213700", f"http://www.hmrc.gov.uk/softwaredevelopers/rates/exrates-monthly-{m:02d}14.xml")
+        f"2014-{m:02d}": (
+            "20151202213700",
+            f"http://www.hmrc.gov.uk/softwaredevelopers/rates/exrates-monthly-{m:02d}14.xml",
+        )
         for m in range(3, 13)
     },
 }
@@ -46,35 +52,160 @@ AVERAGE_SOURCES = [
     ("avg2013.csv", "20141213032646", f"{GOVUK}/file/371053/Avg-year-20130331.csv", []),
     ("avg2014.csv", "20141213032646", f"{GOVUK}/file/371018/Avg-year-20140331.csv", []),
     ("avg2015.csv", "20160116145828", f"{GOVUK}/file/421061/average310315-1.csv", []),
-    ("avg2016.csv", "20170101000000", f"{GOVUK}/file/518917/average_spot_rates_310316.csv", []),
-    ("avg2017.csv", "20180101000000", f"{GOVUK}/file/609410/R-of-E-yearly-spot-rate-avg.csv", []),
-    ("avg2017dec.csv", "20180104121914", f"{GOVUK}/file/671647/average-year-to-december-2017.csv", ["2017-12"]),
-    ("avg2018mar.csv", "20190101000000", f"{ASSETS}/media/5ac3a19eed915d0b7ffac85c/average-year-to-march-2018.csv", ["2018-03"]),
-    ("avg2018dec.csv", "20231009170349", f"{ASSETS}/media/5c2dec0be5274a65cc0f5d40/average-year-to-december-2018.csv", ["2018-12", None]),
-    ("avg2019mar.csv", "20200101000000", f"{ASSETS}/media/5d0cae3fed915d0935874ae1/Average_for_the_year_to_31_March_2019.csv", ["2019-03"]),
-    ("avg2019dec.csv", "20210101000000", f"{ASSETS}/media/5e847c55e90e0706ecc6940a/Average-for-the-year-to-December-2019.csv", ["2019-12"]),
+    (
+        "avg2016.csv",
+        "20170101000000",
+        f"{GOVUK}/file/518917/average_spot_rates_310316.csv",
+        [],
+    ),
+    (
+        "avg2017.csv",
+        "20180101000000",
+        f"{GOVUK}/file/609410/R-of-E-yearly-spot-rate-avg.csv",
+        [],
+    ),
+    (
+        "avg2017dec.csv",
+        "20180104121914",
+        f"{GOVUK}/file/671647/average-year-to-december-2017.csv",
+        ["2017-12"],
+    ),
+    (
+        "avg2018mar.csv",
+        "20190101000000",
+        f"{ASSETS}/media/5ac3a19eed915d0b7ffac85c/average-year-to-march-2018.csv",
+        ["2018-03"],
+    ),
+    (
+        "avg2018dec.csv",
+        "20231009170349",
+        f"{ASSETS}/media/5c2dec0be5274a65cc0f5d40/average-year-to-december-2018.csv",
+        ["2018-12", None],
+    ),
+    (
+        "avg2019mar.csv",
+        "20200101000000",
+        f"{ASSETS}/media/5d0cae3fed915d0935874ae1/Average_for_the_year_to_31_March_2019.csv",
+        ["2019-03"],
+    ),
+    (
+        "avg2019dec.csv",
+        "20210101000000",
+        f"{ASSETS}/media/5e847c55e90e0706ecc6940a/Average-for-the-year-to-December-2019.csv",
+        ["2019-12"],
+    ),
 ]
 SPOT_SOURCES = [
-    ("spot2011.csv", "20160116145828", f"{GOVUK}/file/407082/Spot-year-20110331.csv", []),
-    ("spot2012.csv", "20160116145828", f"{GOVUK}/file/407083/Spot-year-20120331.csv", []),
-    ("spot2013.csv", "20160116145828", f"{GOVUK}/file/407084/Spot-year-20130331.csv", []),
-    ("spot2014.csv", "20160116145828", f"{GOVUK}/file/407085/spot-year-20140331.csv", []),
-    ("spot2015.csv", "20160116145828", f"{GOVUK}/file/421067/spot_rates_310315.csv", []),
-    ("spot2015dec.csv", "20170101000000", f"{GOVUK}/file/490386/spotratesdec15.csv", ["2015-12"]),
-    ("spot2016mar.csv", "20170101000000", f"{GOVUK}/file/519274/spot_rates.csv", ["2016-03"]),
-    ("spot2017.csv", "20180101000000", f"{GOVUK}/file/609474/spot_rates_31-03-17.csv", []),
-    ("spot2017dec.csv", "20180104121914", f"{GOVUK}/file/671649/spot-rates-december-2017.csv", ["2017-12"]),
-    ("spot2018mar.csv", "20190101000000", f"{ASSETS}/media/5ac3a47ded915d0b7ffac85d/spot-rates-march-2018.csv", ["2018-03"]),
-    ("spot2018dec.csv", "20231009170349", f"{ASSETS}/media/5c2dec88ed915d73360e2d15/spot-rates-december-2018.csv", ["2018-12"]),
-    ("spot2019mar.csv", "20231009170349", f"{ASSETS}/media/5ca4dbb540f0b625e50ef58d/spot-rates-year-to-march-2019.csv", ["2018-12", "2019-03"]),
-    ("spot2020mar.csv", "20210101000000", f"{ASSETS}/media/5e0b2d80ed915d6a90802327/spot-rates-year-to-march-2020.csv", ["2019-12", "2020-03"]),
-    ("spot2020maralt.csv", "20210101000000", f"{ASSETS}/media/5ec38addd3bf7f5d3defffb9/Spot_rates_on_31_March_2020.csv", ["2019-12", "2020-03"]),
-    ("spot2020dec.csv", "20210601000000", f"{ASSETS}/media/5ff480a1e90e0776a920843c/Spot_rates_on_31_December_2020.csv", ["2020-12"]),
+    (
+        "spot2011.csv",
+        "20160116145828",
+        f"{GOVUK}/file/407082/Spot-year-20110331.csv",
+        [],
+    ),
+    (
+        "spot2012.csv",
+        "20160116145828",
+        f"{GOVUK}/file/407083/Spot-year-20120331.csv",
+        [],
+    ),
+    (
+        "spot2013.csv",
+        "20160116145828",
+        f"{GOVUK}/file/407084/Spot-year-20130331.csv",
+        [],
+    ),
+    (
+        "spot2014.csv",
+        "20160116145828",
+        f"{GOVUK}/file/407085/spot-year-20140331.csv",
+        [],
+    ),
+    (
+        "spot2015.csv",
+        "20160116145828",
+        f"{GOVUK}/file/421067/spot_rates_310315.csv",
+        [],
+    ),
+    (
+        "spot2015dec.csv",
+        "20170101000000",
+        f"{GOVUK}/file/490386/spotratesdec15.csv",
+        ["2015-12"],
+    ),
+    (
+        "spot2016mar.csv",
+        "20170101000000",
+        f"{GOVUK}/file/519274/spot_rates.csv",
+        ["2016-03"],
+    ),
+    (
+        "spot2017.csv",
+        "20180101000000",
+        f"{GOVUK}/file/609474/spot_rates_31-03-17.csv",
+        [],
+    ),
+    (
+        "spot2017dec.csv",
+        "20180104121914",
+        f"{GOVUK}/file/671649/spot-rates-december-2017.csv",
+        ["2017-12"],
+    ),
+    (
+        "spot2018mar.csv",
+        "20190101000000",
+        f"{ASSETS}/media/5ac3a47ded915d0b7ffac85d/spot-rates-march-2018.csv",
+        ["2018-03"],
+    ),
+    (
+        "spot2018dec.csv",
+        "20231009170349",
+        f"{ASSETS}/media/5c2dec88ed915d73360e2d15/spot-rates-december-2018.csv",
+        ["2018-12"],
+    ),
+    (
+        "spot2019mar.csv",
+        "20231009170349",
+        f"{ASSETS}/media/5ca4dbb540f0b625e50ef58d/spot-rates-year-to-march-2019.csv",
+        ["2018-12", "2019-03"],
+    ),
+    (
+        "spot2020mar.csv",
+        "20210101000000",
+        f"{ASSETS}/media/5e0b2d80ed915d6a90802327/spot-rates-year-to-march-2020.csv",
+        ["2019-12", "2020-03"],
+    ),
+    (
+        "spot2020maralt.csv",
+        "20210101000000",
+        f"{ASSETS}/media/5ec38addd3bf7f5d3defffb9/Spot_rates_on_31_March_2020.csv",
+        ["2019-12", "2020-03"],
+    ),
+    (
+        "spot2020dec.csv",
+        "20210601000000",
+        f"{ASSETS}/media/5ff480a1e90e0776a920843c/Spot_rates_on_31_December_2020.csv",
+        ["2020-12"],
+    ),
 ]
 WEEKLY_SOURCES = [
-    ("weekly2014.csv", "20171111053606", f"{GOVUK}/file/391353/exrates-amendments.csv", []),
-    ("weekly2015.csv", "20201111124706", f"{ASSETS}/government/uploads/system/uploads/attachment_data/file/488697/exrates-weekly-1215.csv", []),
-    ("weekly2016.csv", "20201111122926", f"{ASSETS}/government/uploads/system/uploads/attachment_data/file/518746/exrates-weekly-0416.csv", []),
+    (
+        "weekly2014.csv",
+        "20171111053606",
+        f"{GOVUK}/file/391353/exrates-amendments.csv",
+        [],
+    ),
+    (
+        "weekly2015.csv",
+        "20201111124706",
+        f"{ASSETS}/government/uploads/system/uploads/attachment_data/file/488697/exrates-weekly-1215.csv",
+        [],
+    ),
+    (
+        "weekly2016.csv",
+        "20201111122926",
+        f"{ASSETS}/government/uploads/system/uploads/attachment_data/file/518746/exrates-weekly-0416.csv",
+        [],
+    ),
 ]
 # Trade-tariff HTML views: spot periods listed by the API without downloadable files.
 SPOT_HTML_PERIODS = ["2021-3", "2021-12", "2022-3", "2022-12", "2023-3"]
@@ -112,7 +243,9 @@ PRINCIPALS = {
     "CHF": {"switzerl"},  # "Switzerland" minus "and"
 }
 
-log = lambda *a: print(*a, file=sys.stderr)
+
+def log(*args: object) -> None:
+    print(*args, file=sys.stderr)
 
 
 def fetch(url: str) -> bytes:
@@ -145,6 +278,7 @@ def match_key(s: str) -> str:
 
 # --- currency-code resolution ------------------------------------------------
 
+
 def build_code_map() -> dict:
     """(country, currency-name) and country -> code, from all monthly XMLs (latest wins)."""
     by_pair, by_country, codes = {}, {}, set()
@@ -163,7 +297,9 @@ def build_code_map() -> dict:
     return {"pair": by_pair, "country": by_country, "codes": codes}
 
 
-def resolve_code(code_map: dict, country: str, unit: str, period: str) -> tuple[str, int] | None:
+def resolve_code(
+    code_map: dict, country: str, unit: str, period: str
+) -> tuple[str, int] | None:
     """-> (code, confidence 3..1) or None; None also for dropped transition rows."""
     c, u = match_key(country), match_key(unit)
     for dc, dp in DROP_ROWS:
@@ -180,9 +316,15 @@ def resolve_code(code_map: dict, country: str, unit: str, period: str) -> tuple[
     if (c, u) in code_map["pair"]:
         return code_map["pair"][(c, u)], 2
     # Country match: exact, else unique prefix in either direction.
-    countries = [c] if c in code_map["country"] else [
-        k for k in code_map["country"] if k and c and (k.startswith(c) or c.startswith(k))
-    ]
+    countries = (
+        [c]
+        if c in code_map["country"]
+        else [
+            k
+            for k in code_map["country"]
+            if k and c and (k.startswith(c) or c.startswith(k))
+        ]
+    )
     if len(countries) == 1:
         codes = code_map["country"][countries[0]]
         if len(codes) == 1:
@@ -199,7 +341,9 @@ def resolve_code(code_map: dict, country: str, unit: str, period: str) -> tuple[
 
 # --- CSV normalization --------------------------------------------------------
 
-PERIOD_RE = re.compile(r"31\s+(March|December)\s+(\d{4})|31-(Mar|Dec)-(\d{2})", re.IGNORECASE)
+PERIOD_RE = re.compile(
+    r"31\s+(March|December)\s+(\d{4})|31-(Mar|Dec)-(\d{2})", re.IGNORECASE
+)
 
 
 def decode(data: bytes) -> str:
@@ -234,14 +378,20 @@ def locate_header(rows: list[list[str]]) -> tuple[int, list[str]]:
 
 
 def unit_column(header: list[str]) -> int:
-    return next(i for i, h in enumerate(header) if "unit" in norm(h) and "sterling" not in norm(h))
+    return next(
+        i
+        for i, h in enumerate(header)
+        if "unit" in norm(h) and "sterling" not in norm(h)
+    )
 
 
-def parse_wide_csv(text: str, fallback_periods: list) -> dict[str, list[tuple[str, str, str, str]]]:
+def parse_wide_csv(
+    text: str, fallback_periods: list
+) -> dict[str, list[tuple[str, str, str, str]]]:
     """-> period -> [(country, unit, sterling, units_per_gbp)]; handles wide files and preambles."""
     rows = [r for r in csv.reader(io.StringIO(text))]
     header_i, header = locate_header(rows)
-    context = [" ".join(r) for r in rows[max(0, header_i - 3):header_i]]
+    context = [" ".join(r) for r in rows[max(0, header_i - 3) : header_i]]
 
     unit_col = unit_column(header)
     rate_cols = [i for i, h in enumerate(header) if "units per" in norm(h)]
@@ -250,7 +400,9 @@ def parse_wide_csv(text: str, fallback_periods: list) -> dict[str, list[tuple[st
     periods = [header_period(header[col]) for col in rate_cols]
     if any(p is None for p in periods):
         # Try periods named in preamble rows (in order), then the declared fallback.
-        from_context = list(dict.fromkeys(p for line in context for p in find_periods(line)))
+        from_context = list(
+            dict.fromkeys(p for line in context for p in find_periods(line))
+        )
         if len(from_context) == len(rate_cols):
             periods = from_context
         elif len(fallback_periods) == len(rate_cols):
@@ -261,7 +413,7 @@ def parse_wide_csv(text: str, fallback_periods: list) -> dict[str, list[tuple[st
             raise SystemExit(f"cannot infer periods: headers {header!r}")
 
     out: dict[str, list] = {p: [] for p in periods if p}
-    for row in rows[header_i + 1:]:
+    for row in rows[header_i + 1 :]:
         if len(row) <= unit_col or not row[0].strip() or norm(row[0]) == "country":
             continue
         country, unit = row[0].strip(), row[unit_col].strip()
@@ -290,7 +442,9 @@ def monthly_reference(period: str) -> dict[str, float]:
     return out
 
 
-def write_canonical(kind: str, period: str, rows: list[tuple[str, str, str, str]], code_map: dict) -> None:
+def write_canonical(
+    kind: str, period: str, rows: list[tuple[str, str, str, str]], code_map: dict
+) -> None:
     target = DATA / kind / f"{period}.csv"
     dropped = []
     reference = monthly_reference(period) if kind == "spot" else {}
@@ -304,19 +458,33 @@ def write_canonical(kind: str, period: str, rows: list[tuple[str, str, str, str]
             continue
         code, confidence = resolved
         if reference.get(code) and not 0.5 < float(rate) / reference[code] < 2.0:
-            dropped.append(f"{country}/{unit.strip()} ({code} {rate} vs monthly {reference[code]})")
+            dropped.append(
+                f"{country}/{unit.strip()} ({code} {rate} vs monthly {reference[code]})"
+            )
             continue
         unit_clean = unit.strip().removeprefix(f"{code} ").strip()
         principal = match_key(country) in PRINCIPALS.get(code, {match_key(country)})
         precision = len(rate.split(".")[1]) if "." in rate else 0
-        candidate = (confidence, principal, precision, country, unit_clean, sterling, rate)
+        candidate = (
+            confidence,
+            principal,
+            precision,
+            country,
+            unit_clean,
+            sterling,
+            rate,
+        )
         best = by_code.get(code)
         if best is None or candidate[:3] > best[:3]:
             if best is not None and best[6] != rate:
-                log(f"  {period} {code}: kept {rate} ({country}), discarded {best[6]} ({best[3]})")
+                log(
+                    f"  {period} {code}: kept {rate} ({country}), discarded {best[6]} ({best[3]})"
+                )
             by_code[code] = candidate
         elif best[6] != rate:
-            log(f"  {period} {code}: kept {best[6]} ({best[3]}), discarded {rate} ({country})")
+            log(
+                f"  {period} {code}: kept {best[6]} ({best[3]}), discarded {rate} ({country})"
+            )
 
     out = io.StringIO()
     writer = csv.writer(out, lineterminator="\n")
@@ -330,6 +498,7 @@ def write_canonical(kind: str, period: str, rows: list[tuple[str, str, str, str]
 
 
 # --- series backfills ----------------------------------------------------------
+
 
 def backfill_monthly() -> None:
     for period, (ts, url) in MONTHLY_2014.items():
@@ -346,7 +515,9 @@ def backfill_monthly() -> None:
         log(f"wrote {target} ({len(root)} entries)")
 
 
-def backfill_csvs(kind: str, sources: list, code_map: dict, force: bool = False) -> None:
+def backfill_csvs(
+    kind: str, sources: list, code_map: dict, force: bool = False
+) -> None:
     for name, ts, url, fallback in sources:
         text = decode(archived(name, ts, url))
         for period, rows in parse_wide_csv(text, fallback).items():
@@ -381,11 +552,18 @@ def extract_rows(text: str, period: str) -> list[tuple[str, str, str, str]]:
     rate_col = max(i for i, h in enumerate(header) if "units per" in norm(h))
     sterling_col = max(i for i, h in enumerate(header) if "sterling" in norm(h))
     out = []
-    for row in rows[header_i + 1:]:
+    for row in rows[header_i + 1 :]:
         if len(row) <= rate_col or not row[0].strip() or not row[rate_col].strip():
             continue
         # Prefix the unit with the source code so resolve_code() keeps it verbatim.
-        out.append((row[0].strip(), f"{row[code_col].strip()} {row[unit_col].strip()}", row[sterling_col].strip(), row[rate_col].strip()))
+        out.append(
+            (
+                row[0].strip(),
+                f"{row[code_col].strip()} {row[unit_col].strip()}",
+                row[sterling_col].strip(),
+                row[rate_col].strip(),
+            )
+        )
     return out
 
 
@@ -396,11 +574,23 @@ def backfill_spot_html(code_map: dict) -> None:
         target = DATA / "spot" / f"{period}.csv"
         if target.exists():
             continue
-        html = decode(cached(f"tt{raw}.html", f"https://www.trade-tariff.service.gov.uk/exchange_rates/view/{raw}?type=spot"))
-        cells = re.findall(r'<td class="govuk-table__cell[^"]*">\s*([^<]*?)\s*</td>', html)
+        html = decode(
+            cached(
+                f"tt{raw}.html",
+                f"https://www.trade-tariff.service.gov.uk/exchange_rates/view/{raw}?type=spot",
+            )
+        )
+        cells = re.findall(
+            r'<td class="govuk-table__cell[^"]*">\s*([^<]*?)\s*</td>', html
+        )
         rows = []
         for i in range(0, len(cells) - 3, 6):
-            country, unit, code, rate = cells[i], cells[i + 1], cells[i + 2], cells[i + 3]
+            country, unit, code, rate = (
+                cells[i],
+                cells[i + 1],
+                cells[i + 2],
+                cells[i + 3],
+            )
             if re.fullmatch(r"[A-Z]{3}", code) and re.fullmatch(r"[0-9.]+", rate):
                 rows.append((country, f"{code} {unit}", "", rate))
         assert len(rows) >= 8, f"{period}: scraped only {len(rows)} rows"
@@ -432,19 +622,31 @@ def backfill_weekly() -> None:
             rate = row[fields["rate"]].strip()
             assert re.fullmatch(r"[A-Z]{3}", code), f"bad code {code!r}"
             assert float(rate) > 0, f"bad rate {rate!r}"
-            entries.append((date.isoformat(), row[fields["country name"]].strip(), row[fields["currency name"]].strip(), code, rate))
+            entries.append(
+                (
+                    date.isoformat(),
+                    row[fields["country name"]].strip(),
+                    row[fields["currency name"]].strip(),
+                    code,
+                    rate,
+                )
+            )
     entries.sort()
     target.parent.mkdir(exist_ok=True)
     with target.open("w", encoding="utf-8", newline="") as fh:
         writer = csv.writer(fh, lineterminator="\n")
         writer.writerow(["Date", "Country", "Currency Name", "Currency Code", "Rate"])
         writer.writerows(entries)
-    log(f"wrote {target} ({len(entries)} amendments, {entries[0][0]}..{entries[-1][0]})")
+    log(
+        f"wrote {target} ({len(entries)} amendments, {entries[0][0]}..{entries[-1][0]})"
+    )
 
 
 def validate() -> None:
     problems = []
-    expected = {f"{y}-12" for y in range(2010, 2026)} | {f"{y}-03" for y in range(2011, 2027)}
+    expected = {f"{y}-12" for y in range(2010, 2026)} | {
+        f"{y}-03" for y in range(2011, 2027)
+    }
     for kind in ("average", "spot"):
         have = {p.stem for p in DATA.glob(f"{kind}/*.csv")}
         if missing := sorted(expected - have):
@@ -471,6 +673,7 @@ def validate() -> None:
 
 def sanity() -> None:
     import decimal
+
     for period, lo, hi in [("2020-12", 1.2, 1.5), ("2011-03", 1.4, 1.8)]:
         path = DATA / "spot" / f"{period}.csv"
         with path.open(encoding="utf-8") as fh:
