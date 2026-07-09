@@ -16,7 +16,7 @@ jobs:
     steps:
       # RELEASE_TOKEN (fine-grained PAT): pushes made with the default
       # GITHUB_TOKEN do not trigger the tag-driven Publish/Wheels workflows.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           token: ${{ secrets.RELEASE_TOKEN || github.token }}
