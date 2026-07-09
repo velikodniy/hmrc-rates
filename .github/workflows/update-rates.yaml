@@ -14,23 +14,26 @@ jobs:
     permissions:
       contents: write
     steps:
+      # RELEASE_TOKEN (fine-grained PAT): pushes made with the default
+      # GITHUB_TOKEN do not trigger the tag-driven Publish/Wheels workflows.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN || github.token }}
       - name: Download new rates
         id: download
         run: python3 scripts/update_rates.py --verbose >> "$GITHUB_OUTPUT"
       - name: Run tests against new data
         if: steps.download.outputs.has-new == 'true'
         run: |
-          cargo test --all-features
-          cargo test --features http -- --ignored live_endpoint_smoke
+          cargo test -p hmrc-rates --all-features
+          cargo test -p hmrc-rates --features http -- --ignored live_endpoint_smoke
       - name: Bump version, commit and tag
         if: steps.download.outputs.has-new == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          old=$(grep -m1 '^version' Cargo.toml | cut -d'"' -f2)
+          old=$(grep -m1 '^version = "' Cargo.toml | cut -d'"' -f2)
           new=$(echo "$old" | awk -F. '{printf "%d.%d.%d", $1, $2, $3 + 1}')
           sed -i "0,/^version = \"$old\"/s//version = \"$new\"/" Cargo.toml
           cargo update --workspace

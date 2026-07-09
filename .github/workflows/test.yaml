@@ -13,17 +13,17 @@ jobs:
       - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
       - name: Format
-        run: cargo fmt --check
+        run: cargo fmt --all --check
       - name: Clippy
-        run: cargo clippy --all-features --all-targets -- -D warnings
+        run: cargo clippy --workspace --all-features --all-targets -- -D warnings
       - name: Test (default features)
-        run: cargo test
+        run: cargo test -p hmrc-rates
       - name: Test (all features)
-        run: cargo test --all-features
+        run: cargo test -p hmrc-rates --all-features
       - name: Check (no default features)
-        run: cargo check --no-default-features
+        run: cargo check -p hmrc-rates --no-default-features
       - name: Docs
-        run: cargo doc --all-features --no-deps
+        run: cargo doc -p hmrc-rates --all-features --no-deps
         env:
           RUSTDOCFLAGS: -D warnings
   wasm:
@@ -34,4 +34,4 @@ jobs:
       - name: Add wasm target
         run: rustup target add wasm32-unknown-unknown
       - name: Check no_std wasm build
-        run: cargo check --target wasm32-unknown-unknown --no-default-features --features bundled
+        run: cargo check -p hmrc-rates --target wasm32-unknown-unknown --no-default-features --features bundled
