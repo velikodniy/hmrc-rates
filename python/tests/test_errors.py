@@ -32,7 +32,11 @@ def test_not_in_period():
     # find a currency that joined the monthly series after its first month
     first_table = rates.monthly(rates.months()[0])
     late_joiner = next(
-        (c for c in rates.currencies(RateType.MONTHLY) if first_table.get(c.code) is None),
+        (
+            c
+            for c in rates.currencies(RateType.MONTHLY)
+            if first_table.get(c.code) is None
+        ),
         None,
     )
     if late_joiner is None:

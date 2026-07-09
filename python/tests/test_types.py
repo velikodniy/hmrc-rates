@@ -51,4 +51,6 @@ def test_currency():
 def test_rate_type_members():
     assert RateType.MONTHLY == RateType.MONTHLY
     assert RateType.MONTHLY != RateType.SPOT
-    assert len({RateType.MONTHLY, RateType.SPOT, RateType.AVERAGE, RateType.WEEKLY}) == 4
+    assert (
+        len({RateType.MONTHLY, RateType.SPOT, RateType.AVERAGE, RateType.WEEKLY}) == 4
+    )
