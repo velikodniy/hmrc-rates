@@ -2,6 +2,7 @@
 """Download new HMRC exchange rate files from the Trade Tariff API into data/.
 
 Usage: update_rates.py [--data-dir data] [--verbose]
+
 Emits GitHub Actions outputs on stdout: has-new, release-body, downloaded, skipped, failed.
 """
 

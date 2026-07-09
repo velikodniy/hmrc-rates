@@ -35,7 +35,8 @@ fn gbp_identity(code: &str, period: Period) -> Option<Rate> {
 
 /// All HMRC rate tables: bundled data plus (with the `http` feature) fetched periods.
 ///
-/// `Send + Sync`; cloning is cheap — bundled data is shared statics.
+/// `Send + Sync`: cloning is cheap, bundled data is shared statics.
+///
 /// Start with [`Rates::new`].
 #[derive(Clone)]
 pub struct Rates {
@@ -64,8 +65,9 @@ impl Default for Rates {
 }
 
 impl Rates {
-    /// The bundled dataset. Infallible and effectively free: the tables live
-    /// in the binary's read-only data, nothing is parsed or allocated.
+    /// The bundled dataset.
+    /// Infallible and effectively free.
+    /// The tables live in the binary's read-only data, nothing is parsed or allocated.
     ///
     /// # Examples
     ///

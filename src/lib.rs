@@ -1,9 +1,9 @@
 //! Official HMRC exchange rates with bundled history and exact GBP conversion.
 //!
 //! One [`Rates`] value holds all four series HMRC has published:
-//! monthly customs/VAT rates (from 2014-02), spot and yearly-average rates for
-//! years ending 31 March / 31 December (from 2010-12), and the discontinued
-//! 2014–2016 weekly amendments.
+//! monthly customs/VAT rates (from 2014-02),
+//! spot and yearly-average rates for years ending 31 March / 31 December (from 2010-12),
+//! and the discontinued 2014–2016 weekly amendments.
 //!
 //! ```
 //! use hmrc_rates::{Rates, Month};
@@ -15,23 +15,24 @@
 //! # Ok::<(), hmrc_rates::LookupError>(())
 //! ```
 //!
-//! Rates are HMRC's `rateNew` figures — currency units per £1; conversion
-//! divides, exactly, and the crate never rounds.
-//! Lookups are strict: an unpublished period is an error, never a silently
-//! substituted older rate.
-//! Fallback is explicit — see [`Rates::monthly_rate_or_earlier`].
+//! Rates are HMRC's figures, i.e. currency units per £1.
+//! Conversion divides exactly, and the crate never rounds.
+//!
+//! Lookups are strict.
+//! An unpublished period is an error, never a silently substituted older rate.
+//! Fallback is explicit, see [`Rates::monthly_rate_or_earlier`].
 //!
 //! # Features
 //!
-//! - `std`, `bundled` (default): the full history compiled in — no parsing
-//!   or I/O at startup, ~450 KB of read-only data.
+//! - `std`, `bundled` (default): the full history compiled in,
+//!   no parsing or I/O at startup, ~450 KB of read-only data.
 //! - `http`: a blocking `Updater` that fetches newly published periods,
 //!   with an on-disk cache.
 //! - `serde`: compact string forms (`"2026-07"`, `"USD"`, `"monthly"`).
 //! - `cli`: the `hmrc-rates` binary.
 //!
-//! The core is `no_std` + `alloc`; with only `bundled` enabled the crate
-//! builds on `wasm32-unknown-unknown`.
+//! The core is `no_std` + `alloc`
+//! with only `bundled` enabled the crate builds on `wasm32-unknown-unknown`.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 

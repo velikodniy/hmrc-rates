@@ -1,5 +1,4 @@
-// Compiled as parse.rs's submodule (shared with build.rs); the library proper
-// uses chrono for calendar math
+// Compiled as parse.rs's submodule (shared with build.rs).
 
 /// Days since 1970-01-01 for a proleptic Gregorian date (Howard Hinnant's algorithm).
 #[allow(dead_code)] // used by the build.rs instantiation only

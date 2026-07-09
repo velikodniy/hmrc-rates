@@ -1,4 +1,4 @@
-//! Convert amounts to GBP with bundled rates — no network, no setup.
+//! Convert amounts to GBP with bundled rates
 //!
 //! Run with: cargo run --example convert
 #![allow(clippy::unwrap_used)] // examples favour brevity

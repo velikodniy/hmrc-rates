@@ -173,7 +173,7 @@ impl fmt::Display for YearEnd {
 
 /// A three-letter currency code as published by HMRC.
 ///
-/// Codes are HMRC's own, not always ISO 4217 — Ecuador appears as `ECS`.
+/// Codes are HMRC's own, not always ISO 4217, e.g., Ecuador appears as `ECS`.
 /// Lookups accept plain `&str` (case-insensitive); the library returns `Currency`.
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Currency([u8; 3]);

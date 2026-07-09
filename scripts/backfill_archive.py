@@ -4,6 +4,7 @@
 Recovers monthly XML (2014), yearly average and spot CSVs (from Dec 2010) and
 the 2014-2016 weekly amendment series, and normalizes early API-era CSVs that
 lack a currency-code column.
+
 Idempotent; kept for reproducibility.
 """
 
@@ -210,9 +211,9 @@ WEEKLY_SOURCES = [
 # Trade-tariff HTML views: spot periods listed by the API without downloadable files.
 SPOT_HTML_PERIODS = ["2021-3", "2021-12", "2022-3", "2022-12", "2023-3"]
 
-# Period-aware code overrides for redenominated/pre-euro currencies (period <=
-# cutoff). Country-keyed: unit labels are unreliable (Estonia's kroon-era rows
-# say "Euro"), and each country had a single currency before its cutoff.
+# Period-aware code overrides for redenominated/pre-euro currencies (period <= cutoff).
+# Country-keyed: unit labels are unreliable (Estonia's kroon-era rows say "Euro")
+# and each country had a single currency before its cutoff.
 REDENOMINATIONS = {
     "zambia": ("2013-03", "ZMK"),
     "belarus": ("2016-07", "BYR"),
@@ -276,9 +277,6 @@ def match_key(s: str) -> str:
     return re.sub(r"[^a-z]", "", s.lower()).replace("and", "")
 
 
-# --- currency-code resolution ------------------------------------------------
-
-
 def build_code_map() -> dict:
     """(country, currency-name) and country -> code, from all monthly XMLs (latest wins)."""
     by_pair, by_country, codes = {}, {}, set()
@@ -305,8 +303,8 @@ def resolve_code(
     for dc, dp in DROP_ROWS:
         if c.startswith(dc) and period == dp:
             return None
-    # Explicit code prefix in the unit name ("AUD Dollar") — but names like
-    # "CFA Franc" also start with three capitals, so gate on known codes.
+    # Explicit code prefix in the unit name ("AUD Dollar"),
+    # but names like "CFA Franc" also start with three capitals, so gate on known codes.
     m = re.match(r"^([A-Z]{3})\s+", unit.strip())
     if m and m.group(1) in code_map["codes"]:
         return m.group(1), 3
@@ -338,8 +336,6 @@ def resolve_code(
             return candidates.pop(), 1
     return None
 
-
-# --- CSV normalization --------------------------------------------------------
 
 PERIOD_RE = re.compile(
     r"31\s+(March|December)\s+(\d{4})|31-(Mar|Dec)-(\d{2})", re.IGNORECASE
@@ -495,9 +491,6 @@ def write_canonical(
     target.write_text(out.getvalue(), encoding="utf-8")
     note = f" (dropped: {', '.join(dropped)})" if dropped else ""
     log(f"wrote {target} ({len(by_code)} rows){note}")
-
-
-# --- series backfills ----------------------------------------------------------
 
 
 def backfill_monthly() -> None:

@@ -30,12 +30,12 @@ pub enum FetchError {
     BadData { url: String, reason: String },
 }
 
-/// Extends the bundled dataset with rates HMRC has published since the crate
-/// release, through a verbatim-file disk cache in the system cache directory.
+/// Extends the bundled dataset with rates HMRC has published since the release,
+/// through a disk cache in the system cache directory.
 ///
-/// Past periods never change and are served from disk forever; the current and
-/// next month (plus a just-published spot/average period) are re-fetched after
-/// a 24-hour TTL to pick up HMRC's rare in-month amendments.
+/// Past periods never change and are served from disk forever.
+/// The current and next month (plus a just-published spot/average period)
+/// are re-fetched after a 24-hour TTL to pick up HMRC's rare in-month amendments.
 ///
 /// See [`Updater::refreshed`] for the recommended usage pattern.
 pub struct Updater {
@@ -51,8 +51,8 @@ impl Default for Updater {
 }
 
 impl Updater {
-    /// Infallible: if no system cache directory can be determined, the updater
-    /// works without a cache.
+    /// Infallible: if no system cache directory can be determined,
+    /// the updater works without a cache.
     pub fn new() -> Updater {
         let agent: ureq::Agent = ureq::Agent::config_builder()
             .timeout_global(Some(Duration::from_secs(30)))
@@ -72,14 +72,15 @@ impl Updater {
         self
     }
 
-    /// Overrides the endpoint — for mirrors and tests.
+    /// Overrides the endpoint: for mirrors and tests.
     pub fn with_base_url(mut self, url: impl Into<String>) -> Updater {
         self.base_url = url.into();
         self
     }
 
-    /// Bundled data plus whatever the disk cache holds. Never touches the
-    /// network; unreadable or corrupt cache files are treated as absent.
+    /// Bundled data plus whatever the disk cache holds.
+    /// Never touches the network.
+    /// Unreadable or corrupt cache files are treated as absent.
     pub fn cached(&self) -> Rates {
         let mut rates = Rates::new();
         self.apply_cache(&mut rates);
@@ -87,11 +88,15 @@ impl Updater {
     }
 
     /// Fetches every period published since the bundle, blocking.
-    /// Sources are layered: bundled data, then the disk cache, then the
-    /// network; a 404 means "not published yet" and is skipped.
     ///
-    /// On error, fall back explicitly — stale rates in a tax tool should be
-    /// a visible choice, not a silent default.
+    /// Sources are layered in this order:
+    ///
+    /// - bundled data,
+    /// - the disk cache,
+    /// - the network (a 404 means "not published yet" and is skipped).
+    ///
+    /// On error, fall back explicitly.
+    /// Stale rates in a tax tool should be a visible choice, not a silent default.
     ///
     /// # Examples
     ///
@@ -111,9 +116,8 @@ impl Updater {
         let today = chrono::Utc::now().date_naive();
         let current = Month::from(today);
 
-        // Monthly: from the first month we lack — a transient 404 must not
-        // leave a permanent gap — through next month (HMRC pre-publishes);
-        // current and next month may still be amended
+        // Monthly: from the first month we lack through next month (HMRC pre-publishes).
+        // Current and next month may still be amended.
         let first_missing = first_gap(rates.months(), Month::next).unwrap_or(current);
         let mut candidate = first_missing.min(current);
         while candidate <= current.next() {
@@ -132,8 +136,8 @@ impl Updater {
             candidate = candidate.next();
         }
 
-        // Spot and average: every 31 Mar / 31 Dec period we lack once it's
-        // due; the freshest one stays amendable for 60 days past its end
+        // Spot and average: every 31 Mar / 31 Dec period we lack once it's due.
+        // The freshest one stays amendable for 60 days past its end.
         for (rate_type, prefix) in [(RateType::Spot, "spot"), (RateType::Average, "average")] {
             // Snapshot is safe: the loop never revisits a period it sets
             let periods: Vec<YearEnd> = match rate_type {
@@ -172,8 +176,9 @@ impl Updater {
         Ok(rates)
     }
 
-    /// A validated value from cache (when fresh) or network; `None` = 404,
-    /// i.e. not published yet. Corrupt cache falls through to the network;
+    /// A validated value from cache (when fresh) or network;
+    /// `None` = 404, i.e. not published yet.
+    /// Corrupt cache falls through to the network,
     /// only network-validated bytes are cached.
     fn obtain<T>(
         &self,
@@ -261,7 +266,8 @@ impl Updater {
         None
     }
 
-    /// Atomic best-effort cache write; failure only costs a refetch next run.
+    /// Atomic best-effort cache write.
+    /// Failure only costs a refetch next run.
     fn store(&self, name: &str, bytes: &[u8]) {
         let Some(path) = self.cache_path(name) else {
             return;

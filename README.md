@@ -37,22 +37,19 @@ fn main() -> Result<(), hmrc_rates::LookupError> {
 }
 ```
 
-Rates are HMRC's `rateNew` figures — currency units per £1; `to_gbp` divides.
-`"GBP"` always resolves to the identity rate.
-
 ## Data coverage
 
 One `Rates` value holds all four series HMRC has published:
 
 | Series | Coverage | Lookup |
-|---|---|---|
-| Monthly customs/VAT | 2014-02 - present, no gaps | `monthly_rate(code, month)` |
-| Spot | Dec 2010 - present, years ending 31 Mar / 31 Dec | `spot(YearEnd)` |
-| Yearly average | Dec 2010 - present, years ending 31 Mar / 31 Dec | `average(YearEnd)` |
-| Weekly amendments | 2014-01 - 2016-04, complete (discontinued by HMRC) | `weekly(date)` |
+| --- | --- | --- |
+| Monthly customs/VAT | 2014-02 — present, no gaps | `monthly_rate(code, month)` |
+| Spot | Dec 2010 — present, years ending 31 Mar / 31 Dec | `spot(YearEnd)` |
+| Yearly average | Dec 2010 — present, years ending 31 Mar / 31 Dec | `average(YearEnd)` |
+| Weekly amendments | 2014-01 — 2016-04, complete (discontinued by HMRC) | `weekly(date)` |
 
 Lookups are strict: a period HMRC never published is an error, never a silently substituted older rate.
-The error says why — unknown currency, period not available (with the loaded range), or currency absent from that period.
+The error says why: unknown currency, period not available (with the loaded range), or currency absent from that period.
 Fallback is opt-in and visible:
 
 ```rust,ignore
@@ -60,13 +57,14 @@ let rate = rates.monthly_rate_or_earlier("USD", month, 2)?;
 rate.period() // reveals which month was actually used
 ```
 
-Currency codes are as published by HMRC, which is not always ISO 4217 — Ecuador appears as `ECS`.
+Currency codes are as published by HMRC, which is not always ISO 4217
+E.g., Ecuador appears as `ECS`.
 See [docs/data-sources.md](docs/data-sources.md) for where every rate comes from.
 
 ## Features
 
 | Feature | Default | Adds |
-|---|---|---|
+| --- | --- | --- |
 | `std` | yes | — |
 | `bundled` | yes | the compiled-in history and `Rates::new()` |
 | `http` | no | blocking `Updater` (ureq) with an on-disk cache |
@@ -93,7 +91,7 @@ let rates = updater.refreshed().unwrap_or_else(|e| {
 
 ## Python
 
-The same library is on PyPI as [`hmrc-rates`](https://pypi.org/project/hmrc-rates/) (Python ≥ 3.10):
+The same library is on PyPI as [`hmrc-rates`](https://pypi.org/project/hmrc-rates/) (Python 3.10+):
 
 ```sh
 pip install hmrc-rates
@@ -105,11 +103,10 @@ from hmrc_rates import Month, Rates, YearEnd
 
 rates = Rates()
 rate = rates.monthly_rate("USD", Month(2025, 8))  # also accepts datetime.date or "2025-08"
-gbp = rate.to_gbp(Decimal("2500"))                # exact decimal.Decimal — you choose the rounding
+gbp = rate.to_gbp(Decimal("2500"))                # exact decimal.Decimal, you choose the rounding
 eur = rates.average(YearEnd.march(2025)).rate("EUR")
 ```
 
-Wheels ship for Linux (glibc and musl, x86_64 and aarch64), macOS and Windows; the sdist builds anywhere with a Rust toolchain.
 See [python/README.md](python/README.md) for the full Python API.
 
 ## Documentation

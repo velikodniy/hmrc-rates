@@ -198,7 +198,7 @@ pub fn parse_monthly_xml(bytes: &[u8]) -> Result<((i32, u32), Vec<ParsedRate>), 
     Ok((period, rates))
 }
 
-/// Parses the canonical average/spot CSV (`…,Currency Code,…,Currency Units per £1`).
+/// Parses the canonical average/spot CSV (`...,Currency Code,...,Currency Units per £1`).
 pub fn parse_rates_csv(bytes: &[u8]) -> Result<Vec<ParsedRate>, ParseError> {
     let text = decode_utf8_lossy_bom(bytes);
     let mut reader = csv::Reader::from_reader(text.as_bytes());
@@ -299,10 +299,12 @@ fn parse_iso_date(s: &str) -> Result<(i32, u32, u32), ParseError> {
     Ok((year, month, day))
 }
 
-/// Dedups multi-country rows (EUR appears ~19 times). Conflicts resolve by
-/// majority; ties resolve to the most precise value when the tied values agree
-/// after rounding to the lower precision (e.g. USA 1.5958134 vs Liberia
-/// 1.595813), otherwise error. Output is sorted by code.
+/// Dedups multi-country rows (EUR appears ~19 times).
+/// Conflicts resolve by majority.
+/// Ties resolve to the most precise value when the tied values agree
+/// after rounding to the lower precision.
+/// (E.g. USA 1.5958134 vs Liberia 1.595813), otherwise error.
+/// Output is sorted by code.
 pub fn dedup_majority(mut rates: Vec<ParsedRate>) -> Result<Vec<ParsedRate>, ParseError> {
     rates.sort_unstable_by_key(|r| (r.code, r.mantissa, r.scale));
     let mut out: Vec<ParsedRate> = Vec::with_capacity(rates.len());

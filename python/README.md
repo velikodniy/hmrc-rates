@@ -7,10 +7,12 @@ All money values are `decimal.Decimal` and conversions are exact — the library
 ## Install
 
 ```sh
-pip install hmrc-rates
+python3 -m pip install hmrc-rates
 ```
 
-Python ≥ 3.10. Wheels ship for Linux (glibc and musl, x86_64 and aarch64), macOS and Windows; the sdist builds anywhere with a Rust toolchain.
+Python ≥ 3.10.
+Wheels ship for Linux (glibc and musl, x86_64 and aarch64), macOS and Windows.
+The sdist builds anywhere with a Rust toolchain.
 
 ## Quick start
 
@@ -36,7 +38,6 @@ table = rates.monthly(datetime.date(2025, 8, 15))
 print(f"{len(table)} currencies in {table.period}")
 ```
 
-Rates are HMRC's `rateNew` figures — currency units per £1; `to_gbp` divides.
 `"GBP"` always resolves to the identity rate, and code lookups are case-insensitive.
 
 ## Data coverage
@@ -44,13 +45,14 @@ Rates are HMRC's `rateNew` figures — currency units per £1; `to_gbp` divides.
 One `Rates` value holds all four series HMRC has published:
 
 | Series | Coverage | Lookup |
-|---|---|---|
-| Monthly customs/VAT | 2014-02 - present, no gaps | `monthly_rate(code, month)` |
-| Spot | Dec 2010 - present, years ending 31 Mar / 31 Dec | `spot(year_end)` |
-| Yearly average | Dec 2010 - present, years ending 31 Mar / 31 Dec | `average(year_end)` |
-| Weekly amendments | 2014-01 - 2016-04, complete (discontinued by HMRC) | `weekly(date)` |
+| --- | --- | --- |
+| Monthly customs/VAT | 2014-02 — present, no gaps | `monthly_rate(code, month)` |
+| Spot | Dec 2010 — present, years ending 31 Mar / 31 Dec | `spot(year_end)` |
+| Yearly average | Dec 2010 — present, years ending 31 Mar / 31 Dec | `average(year_end)` |
+| Weekly amendments | 2014-01 — 2016-04, complete (discontinued by HMRC) | `weekly(date)` |
 
-Currency codes are as published by HMRC, which is not always ISO 4217 — Ecuador appears as `ECS`.
+Currency codes are as published by HMRC, which is not always ISO 4217.
+E.g. Ecuador appears as `ECS`.
 
 ## Strict lookups and exceptions
 
@@ -71,13 +73,15 @@ rate.period  # reveals which month was actually used
 
 ## Exactness
 
-Amounts must be `decimal.Decimal` or `int`; floats raise `TypeError` because they are inexact.
-Results come back as `decimal.Decimal`, unrounded — apply whatever rounding your tax context requires.
+Amounts must be `decimal.Decimal` or `int`: floats raise `TypeError` because they are inexact.
+Results come back as `decimal.Decimal`, unrounded.
+Apply whatever rounding your tax context requires.
 
 ## Fresh rates
 
 `Updater` fetches whatever HMRC has published since this release and caches the files verbatim in the system cache directory.
-`refreshed()` performs blocking HTTP with the GIL released; `cached()` never touches the network.
+`refreshed()` performs blocking HTTP with the GIL released.
+`cached()` never touches the network.
 
 ```python
 from hmrc_rates import FetchError, Updater
@@ -90,7 +94,8 @@ except FetchError as e:
     rates = updater.cached()  # offline fallback is an explicit choice
 ```
 
-New HMRC publications also trigger a new patch release of this package automatically, so pinning the latest version is an alternative to runtime fetching.
+New HMRC publications also trigger a new patch release of this package automatically.
+So pinning the latest version is an alternative to runtime fetching.
 
 ## Development
 
@@ -101,7 +106,8 @@ VIRTUAL_ENV=$PWD/.venv .venv/bin/maturin develop
 .venv/bin/pytest
 ```
 
-The package is a [PyO3](https://pyo3.rs) binding built with [Maturin](https://maturin.rs); the Rust sources live in the [repository root](https://github.com/velikodniy/hmrc-rates).
+The package is a [PyO3](https://pyo3.rs) binding built with [Maturin](https://maturin.rs).
+The Rust sources live in the [repository root](https://github.com/velikodniy/hmrc-rates).
 
 ## Licence
 

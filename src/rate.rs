@@ -4,7 +4,8 @@ use crate::types::{Currency, Period};
 
 /// A resolved HMRC rate: currency units per £1, with exact `Decimal` arithmetic.
 ///
-/// The crate never rounds — callers apply whatever rounding their tax context requires.
+/// The crate never rounds.
+/// Callers apply whatever rounding their tax context requires.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Rate {
@@ -29,7 +30,7 @@ impl Rate {
 
     /// Converts an amount in this rate's currency to GBP (`amount / units_per_gbp`).
     ///
-    /// Exact division — round the result yourself when you report it.
+    /// Exact division, round the result yourself.
     ///
     /// # Examples
     ///
@@ -57,8 +58,9 @@ impl Rate {
         self.currency
     }
 
-    /// The period the rate was published for — reveals the substituted month
-    /// after [`Rates::monthly_rate_or_earlier`](crate::Rates::monthly_rate_or_earlier).
+    /// The period the rate was published for.
+    /// Reveals the substituted month after
+    /// [`Rates::monthly_rate_or_earlier`](crate::Rates::monthly_rate_or_earlier).
     pub fn period(&self) -> Period {
         self.period
     }
