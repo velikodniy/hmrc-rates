@@ -62,9 +62,9 @@ impl From<Series> for RateType {
     }
 }
 
-fn year_end(month: YearMonth) -> Result<YearEnd, String> {
-    YearEnd::from_month(month)
-        .ok_or_else(|| format!("'{month}' is not a spot/average period (use MM = 03 or 12)"))
+fn year_end(year_month: YearMonth) -> Result<YearEnd, String> {
+    YearEnd::from_month(year_month)
+        .ok_or_else(|| format!("'{year_month}' is not a spot/average period (use MM = 03 or 12)"))
 }
 
 fn load(refresh: bool) -> Result<Rates, Box<dyn std::error::Error>> {
@@ -89,13 +89,13 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         }
         Command::Rate {
             code,
-            period: month,
+            period: year_month,
             r#type,
         } => {
             let rate = match r#type {
-                Series::Monthly => rates.monthly_rate(&code, month)?,
-                Series::Spot => rates.spot(year_end(month)?)?.rate(&code)?,
-                Series::Average => rates.average(year_end(month)?)?.rate(&code)?,
+                Series::Monthly => rates.monthly_rate(&code, year_month)?,
+                Series::Spot => rates.spot(year_end(year_month)?)?.rate(&code)?,
+                Series::Average => rates.average(year_end(year_month)?)?.rate(&code)?,
                 Series::Weekly => {
                     return Err("use `convert` or `list weekly` for the weekly series".into());
                 }

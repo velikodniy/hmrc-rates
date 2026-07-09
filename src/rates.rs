@@ -128,9 +128,9 @@ impl Rates {
     pub fn monthly_rate(
         &self,
         code: &str,
-        month: impl Into<YearMonth>,
+        year_month: impl Into<YearMonth>,
     ) -> Result<Rate, LookupError> {
-        self.monthly_rate_or_earlier(code, month, 0)
+        self.monthly_rate_or_earlier(code, year_month, 0)
     }
 
     /// Like [`Rates::monthly_rate`], but walks back to the nearest earlier
@@ -154,10 +154,10 @@ impl Rates {
     pub fn monthly_rate_or_earlier(
         &self,
         code: &str,
-        month: impl Into<YearMonth>,
+        year_month: impl Into<YearMonth>,
         max_months_back: u32,
     ) -> Result<Rate, LookupError> {
-        let requested = month.into();
+        let requested = year_month.into();
         // GBP resolves for the requested month itself — no substitution
         if let Some(rate) = gbp_identity(code, Period::Month(requested)) {
             return Ok(rate);
@@ -173,10 +173,10 @@ impl Rates {
     }
 
     /// The whole monthly table for one month.
-    pub fn monthly(&self, month: impl Into<YearMonth>) -> Result<Table<'_>, LookupError> {
-        let month = month.into();
-        let period = Period::Month(month);
-        match self.monthly.table(month.key()) {
+    pub fn monthly(&self, year_month: impl Into<YearMonth>) -> Result<Table<'_>, LookupError> {
+        let year_month = year_month.into();
+        let period = Period::Month(year_month);
+        match self.monthly.table(year_month.key()) {
             Some(entries) => Ok(Table {
                 rate_type: RateType::Monthly,
                 period,

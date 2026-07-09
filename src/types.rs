@@ -123,11 +123,11 @@ impl YearEnd {
         }
     }
 
-    /// The period ending in `month` — `None` unless it is a March or December.
-    pub fn from_month(month: YearMonth) -> Option<YearEnd> {
-        match month.month() {
-            3 => Some(YearEnd::march(month.year())),
-            12 => Some(YearEnd::december(month.year())),
+    /// The period ending in `year_month` — `None` unless it is a March or December.
+    pub fn from_month(year_month: YearMonth) -> Option<YearEnd> {
+        match year_month.month() {
+            3 => Some(YearEnd::march(year_month.year())),
+            12 => Some(YearEnd::december(year_month.year())),
             _ => None,
         }
     }

@@ -165,10 +165,10 @@ impl PyYearEnd {
         PyYearEnd(hmrc_rates::YearEnd::december(year))
     }
 
-    /// The period ending in `month` — `None` unless it is a March or December.
+    /// The period ending in `year_month` — `None` unless it is a March or December.
     #[staticmethod]
-    fn from_month(month: PyYearMonth) -> Option<Self> {
-        hmrc_rates::YearEnd::from_month(month.0).map(PyYearEnd)
+    fn from_month(year_month: PyYearMonth) -> Option<Self> {
+        hmrc_rates::YearEnd::from_month(year_month.0).map(PyYearEnd)
     }
 
     #[getter]
@@ -573,10 +573,10 @@ impl PyRates {
         }
     }
 
-    /// The monthly rate for `code` in `month` (a `YearMonth`, `datetime.date`, or `"YYYY-MM"`).
-    fn monthly_rate(&self, code: &str, month: YearMonthArg) -> PyResult<PyRate> {
+    /// The monthly rate for `code` in `year_month` (a `YearMonth`, `datetime.date`, or `"YYYY-MM"`).
+    fn monthly_rate(&self, code: &str, year_month: YearMonthArg) -> PyResult<PyRate> {
         self.inner
-            .monthly_rate(code, month.into_month()?)
+            .monthly_rate(code, year_month.into_month()?)
             .map(PyRate)
             .map_err(lookup_err)
     }
@@ -585,18 +585,18 @@ impl PyRates {
     fn monthly_rate_or_earlier(
         &self,
         code: &str,
-        month: YearMonthArg,
+        year_month: YearMonthArg,
         max_months_back: u32,
     ) -> PyResult<PyRate> {
         self.inner
-            .monthly_rate_or_earlier(code, month.into_month()?, max_months_back)
+            .monthly_rate_or_earlier(code, year_month.into_month()?, max_months_back)
             .map(PyRate)
             .map_err(lookup_err)
     }
 
     /// The full monthly table for a month.
-    fn monthly(&self, month: YearMonthArg) -> PyResult<PyTable> {
-        PyTable::build(&self.inner, TableKey::Month(month.into_month()?))
+    fn monthly(&self, year_month: YearMonthArg) -> PyResult<PyTable> {
+        PyTable::build(&self.inner, TableKey::Month(year_month.into_month()?))
     }
 
     /// The spot table for a year end.
