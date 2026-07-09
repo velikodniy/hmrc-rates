@@ -12,7 +12,7 @@ Conversions use exact `rust_decimal` arithmetic and are never rounded.
 
 ```toml
 [dependencies]
-hmrc-rates = "0.2"
+hmrc-rates = "0.3"
 rust_decimal = "1"
 ```
 
