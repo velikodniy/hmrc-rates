@@ -20,8 +20,8 @@ Base: `https://www.trade-tariff.service.gov.uk/api/v2/exchange_rates/`
 
 ## Archived history: UK Government Web Archive
 
-Everything older than the API era was recovered once by the backfill script from `webarchive.nationalarchives.gov.uk` snapshots of withdrawn gov.uk publications and the pre-2014 `hmrc.gov.uk/softwaredevelopers` XMLs.
-The live asset URLs are dead; the archive is the only source.
+Everything older than the API era was recovered once by the backfill script from `webarchive.nationalarchives.gov.uk` snapshots of withdrawn gov.uk publications and the old `hmrc.gov.uk/softwaredevelopers` XMLs.
+The gov.uk CSV asset URLs are dead, and the legacy `hmrc.gov.uk/softwaredevelopers/rates/exrates-monthly-MMYY.xml` endpoint is a zombie: it still serves roughly 2015 to mid-2023 but is missing the edges and gets no new files, so the archive snapshots are the canonical source.
 The exact archive URLs live in the script itself.
 
 | Series | Bundled coverage | Notes |
