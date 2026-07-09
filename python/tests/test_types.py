@@ -1,44 +1,44 @@
 import datetime
 
 import pytest
-from hmrc_rates import Currency, Month, RateType, YearEnd
+from hmrc_rates import Currency, YearMonth, RateType, YearEnd
 
 
 def test_month_basics():
-    m = Month(2025, 8)
+    m = YearMonth(2025, 8)
     assert (m.year, m.month) == (2025, 8)
     assert str(m) == "2025-08"
-    assert repr(m) == "Month(2025, 8)"
-    assert m.next() == Month(2025, 9)
-    assert m.prev() == Month(2025, 7)
-    assert Month(2024, 12).next() == Month(2025, 1)
+    assert repr(m) == "YearMonth(2025, 8)"
+    assert m.next() == YearMonth(2025, 9)
+    assert m.prev() == YearMonth(2025, 7)
+    assert YearMonth(2024, 12).next() == YearMonth(2025, 1)
 
 
 def test_month_parse_and_from_date():
-    assert Month.parse("2025-08") == Month(2025, 8)
-    assert Month.from_date(datetime.date(2025, 8, 31)) == Month(2025, 8)
+    assert YearMonth.parse("2025-08") == YearMonth(2025, 8)
+    assert YearMonth.from_date(datetime.date(2025, 8, 31)) == YearMonth(2025, 8)
     with pytest.raises(ValueError):
-        Month.parse("2025/08")
+        YearMonth.parse("2025/08")
     with pytest.raises(ValueError):
-        Month(2025, 13)
+        YearMonth(2025, 13)
 
 
 def test_month_ordering_and_hash():
-    assert Month(2025, 1) < Month(2025, 2) < Month(2026, 1)
-    assert len({Month(2025, 8), Month(2025, 8), Month(2025, 9)}) == 2
+    assert YearMonth(2025, 1) < YearMonth(2025, 2) < YearMonth(2026, 1)
+    assert len({YearMonth(2025, 8), YearMonth(2025, 8), YearMonth(2025, 9)}) == 2
 
 
 def test_year_end():
     march = YearEnd.march(2026)
     assert march.is_march
     assert march.year == 2026
-    assert march.end_month() == Month(2026, 3)
+    assert march.end_month() == YearMonth(2026, 3)
     assert str(march) == "year ending 2026-03-31"
     december = YearEnd.december(2025)
     assert not december.is_march
     assert december < march
-    assert YearEnd.from_month(Month(2025, 12)) == december
-    assert YearEnd.from_month(Month(2025, 5)) is None
+    assert YearEnd.from_month(YearMonth(2025, 12)) == december
+    assert YearEnd.from_month(YearMonth(2025, 5)) is None
 
 
 def test_currency():

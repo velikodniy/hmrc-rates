@@ -3,7 +3,7 @@
 //! Run with: cargo run --example convert
 #![allow(clippy::unwrap_used)] // examples favour brevity
 
-use hmrc_rates::{Month, RateType, Rates, YearEnd};
+use hmrc_rates::{RateType, Rates, YearEnd, YearMonth};
 use rust_decimal::Decimal;
 
 fn main() -> Result<(), hmrc_rates::LookupError> {
@@ -16,7 +16,7 @@ fn main() -> Result<(), hmrc_rates::LookupError> {
     println!("$2500 on {date} = £{} (exact: £{gbp})", gbp.round_dp(2));
 
     // Many conversions in one month: resolve the table once
-    let table = rates.monthly(Month::new(2025, 8).unwrap())?;
+    let table = rates.monthly(YearMonth::new(2025, 8).unwrap())?;
     let eur = table.rate("EUR")?;
     let total: Decimal = [1200, 450, 80]
         .into_iter()

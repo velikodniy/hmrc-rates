@@ -6,7 +6,7 @@ use rust_decimal::Decimal;
 use crate::error::LookupError;
 use crate::rate::Rate;
 use crate::store::{self, Entry, Series, WeekIdx, Weeks};
-use crate::types::{Currency, Month, Period, RateType, YearEnd};
+use crate::types::{Currency, Period, RateType, YearEnd, YearMonth};
 
 // chrono counts day 1 = 0001-01-01; our day 0 = 1970-01-01
 const CE_EPOCH_OFFSET: i32 = 719_163;
@@ -110,7 +110,7 @@ impl Rates {
 
     /// The monthly rate for `code`, strictly for that month.
     ///
-    /// Accepts anything convertible to [`Month`], including `chrono::NaiveDate`.
+    /// Accepts anything convertible to [`YearMonth`], including `chrono::NaiveDate`.
     /// `"GBP"` (any case) returns the identity rate for any month.
     ///
     /// # Examples
@@ -125,7 +125,11 @@ impl Rates {
     /// let gbp = rate.to_gbp(Decimal::from(100));
     /// # Ok::<(), hmrc_rates::LookupError>(())
     /// ```
-    pub fn monthly_rate(&self, code: &str, month: impl Into<Month>) -> Result<Rate, LookupError> {
+    pub fn monthly_rate(
+        &self,
+        code: &str,
+        month: impl Into<YearMonth>,
+    ) -> Result<Rate, LookupError> {
         self.monthly_rate_or_earlier(code, month, 0)
     }
 
@@ -150,7 +154,7 @@ impl Rates {
     pub fn monthly_rate_or_earlier(
         &self,
         code: &str,
-        month: impl Into<Month>,
+        month: impl Into<YearMonth>,
         max_months_back: u32,
     ) -> Result<Rate, LookupError> {
         let requested = month.into();
@@ -169,7 +173,7 @@ impl Rates {
     }
 
     /// The whole monthly table for one month.
-    pub fn monthly(&self, month: impl Into<Month>) -> Result<Table<'_>, LookupError> {
+    pub fn monthly(&self, month: impl Into<YearMonth>) -> Result<Table<'_>, LookupError> {
         let month = month.into();
         let period = Period::Month(month);
         match self.monthly.table(month.key()) {
@@ -252,8 +256,8 @@ impl Rates {
     }
 
     /// All published months, ascending.
-    pub fn months(&self) -> impl DoubleEndedIterator<Item = Month> + use<'_> {
-        self.monthly.keys().into_iter().map(Month::from_key)
+    pub fn months(&self) -> impl DoubleEndedIterator<Item = YearMonth> + use<'_> {
+        self.monthly.keys().into_iter().map(YearMonth::from_key)
     }
 
     /// All published spot periods, ascending.
@@ -311,8 +315,8 @@ impl Rates {
         match table {
             RateType::Monthly => self.monthly.first_last().map(|(f, l)| {
                 (
-                    Period::Month(Month::from_key(f)),
-                    Period::Month(Month::from_key(l)),
+                    Period::Month(YearMonth::from_key(f)),
+                    Period::Month(YearMonth::from_key(l)),
                 )
             }),
             RateType::Spot | RateType::Average => {
@@ -398,11 +402,11 @@ impl<'a> Table<'a> {
     /// # Examples
     ///
     /// ```
-    /// use hmrc_rates::{Month, Rates};
+    /// use hmrc_rates::{YearMonth, Rates};
     /// use rust_decimal::Decimal;
     ///
     /// let rates = Rates::new();
-    /// let table = rates.monthly(Month::new(2025, 8).unwrap())?;
+    /// let table = rates.monthly(YearMonth::new(2025, 8).unwrap())?;
     /// let eur = table.rate("EUR")?;
     /// let total: Decimal = [1200, 450, 80]
     ///     .into_iter()
@@ -470,7 +474,7 @@ mod empty_tests {
     #[test]
     fn empty_rates_report_no_data_loaded() {
         let rates = Rates::empty();
-        let month = Month::new(2025, 8);
+        let month = YearMonth::new(2025, 8);
         let Some(month) = month else { return };
         let result = rates.monthly_rate("USD", month);
         assert!(
@@ -539,7 +543,7 @@ mod bundled_tests {
         let parsed = crate::parse::dedup_majority(raw).unwrap();
 
         let rates = Rates::new();
-        let table = rates.monthly(Month::new(year, month).unwrap()).unwrap();
+        let table = rates.monthly(YearMonth::new(year, month).unwrap()).unwrap();
         assert_eq!(table.len(), parsed.len());
         for rate in &parsed {
             let entry = crate::store::lookup(table.entries, rate.code).unwrap();

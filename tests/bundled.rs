@@ -3,7 +3,7 @@
 #![allow(clippy::unwrap_used, clippy::panic)]
 
 use chrono::NaiveDate;
-use hmrc_rates::{LookupError, Month, Period, RateType, Rates, YearEnd};
+use hmrc_rates::{LookupError, Period, RateType, Rates, YearEnd, YearMonth};
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 
@@ -14,9 +14,9 @@ fn date(y: i32, m: u32, d: u32) -> NaiveDate {
 #[test]
 fn bundled_monthly_coverage_is_contiguous_from_2014_02() {
     let rates = Rates::new();
-    let months: Vec<Month> = rates.months().collect();
-    assert_eq!(months.first().copied(), Month::new(2014, 2));
-    assert!(months.last().unwrap() >= &Month::new(2026, 7).unwrap());
+    let months: Vec<YearMonth> = rates.months().collect();
+    assert_eq!(months.first().copied(), YearMonth::new(2014, 2));
+    assert!(months.last().unwrap() >= &YearMonth::new(2026, 7).unwrap());
     for pair in months.windows(2) {
         assert_eq!(pair[0].next(), pair[1], "gap after {}", pair[0]);
     }
@@ -26,7 +26,7 @@ fn bundled_monthly_coverage_is_contiguous_from_2014_02() {
 fn golden_usd_and_eur_august_2025() {
     let rates = Rates::new();
     let usd = rates
-        .monthly_rate("USD", Month::new(2025, 8).unwrap())
+        .monthly_rate("USD", YearMonth::new(2025, 8).unwrap())
         .unwrap();
     assert_eq!(usd.units_per_gbp(), dec!(1.3541));
     // 0.1 behavior preserved modulo rounding: £73.85 for $100 after round_dp(2)
@@ -41,7 +41,7 @@ fn golden_usd_and_eur_august_2025() {
 fn conversions_are_exact_not_rounded() {
     let rates = Rates::new();
     let rate = rates
-        .monthly_rate("USD", Month::new(2025, 8).unwrap())
+        .monthly_rate("USD", YearMonth::new(2025, 8).unwrap())
         .unwrap();
     let gbp = rate.to_gbp(dec!(100));
     assert_ne!(gbp, gbp.round_dp(2)); // 100/1.3541 is not a 2dp number
@@ -53,7 +53,7 @@ fn strict_monthly_lookup_errors_outside_coverage() {
     let rates = Rates::new();
     for (y, m) in [(2014, 1), (2013, 12), (2035, 1)] {
         let err = rates
-            .monthly_rate("USD", Month::new(y, m).unwrap())
+            .monthly_rate("USD", YearMonth::new(y, m).unwrap())
             .unwrap_err();
         assert!(
             matches!(
@@ -85,7 +85,7 @@ fn gbp_identity_everywhere() {
     let rates = Rates::new();
     // Any month, including unpublished ones
     let rate = rates
-        .monthly_rate("gbp", Month::new(2035, 1).unwrap())
+        .monthly_rate("gbp", YearMonth::new(2035, 1).unwrap())
         .unwrap();
     assert_eq!(rate.units_per_gbp(), Decimal::ONE);
     assert_eq!(rate.to_gbp(dec!(42)), dec!(42));
@@ -111,7 +111,7 @@ fn fallback_walks_back_and_reveals_period() {
     // A zero-step fallback stays strict
     assert!(rates.monthly_rate_or_earlier("USD", next, 0).is_err());
     // Exhausted window is an error for the requested month
-    let far = Month::new(2035, 1).unwrap();
+    let far = YearMonth::new(2035, 1).unwrap();
     assert!(matches!(
         rates.monthly_rate_or_earlier("USD", far, 12),
         Err(LookupError::PeriodNotAvailable { .. })
@@ -124,7 +124,7 @@ fn unknown_currency_vs_not_in_period() {
     // Garbage input and never-published codes fold into UnknownCurrency
     for code in ["XXX", "", "US DOLLARS", "usd extra"] {
         let err = rates
-            .monthly_rate(code, Month::new(2025, 8).unwrap())
+            .monthly_rate(code, YearMonth::new(2025, 8).unwrap())
             .unwrap_err();
         assert!(
             matches!(err, LookupError::UnknownCurrency { .. }),
@@ -247,7 +247,7 @@ fn discovery_iterators() {
     let spot_currencies: Vec<_> = rates.currencies(RateType::Spot).collect();
     assert!(spot_currencies.iter().any(|c| c.as_str() == "USD"));
 
-    let table = rates.monthly(Month::new(2026, 6).unwrap()).unwrap();
+    let table = rates.monthly(YearMonth::new(2026, 6).unwrap()).unwrap();
     assert_eq!(table.iter().len(), table.len());
     assert!(!table.is_empty());
     let (currency, rate) = table.iter().next().unwrap();
@@ -259,14 +259,14 @@ fn discovery_iterators() {
 fn errors_render_helpful_messages() {
     let rates = Rates::new();
     let err = rates
-        .monthly_rate("USD", Month::new(2013, 1).unwrap())
+        .monthly_rate("USD", YearMonth::new(2013, 1).unwrap())
         .unwrap_err();
     let message = err.to_string();
     assert!(message.contains("2013-01"), "{message}");
     assert!(message.contains("available 2014-02"), "{message}");
 
     let err = rates
-        .monthly_rate("XXX", Month::new(2025, 8).unwrap())
+        .monthly_rate("XXX", YearMonth::new(2025, 8).unwrap())
         .unwrap_err();
     assert!(err.to_string().contains("'XXX'"));
 }

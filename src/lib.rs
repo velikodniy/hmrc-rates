@@ -6,11 +6,11 @@
 //! and the discontinued 2014–2016 weekly amendments.
 //!
 //! ```
-//! use hmrc_rates::{Rates, Month};
+//! use hmrc_rates::{Rates, YearMonth};
 //! use rust_decimal::Decimal;
 //!
 //! let rates = Rates::new(); // free: the tables are compiled-in statics
-//! let rate = rates.monthly_rate("USD", Month::new(2025, 8).unwrap())?;
+//! let rate = rates.monthly_rate("USD", YearMonth::new(2025, 8).unwrap())?;
 //! let gbp = rate.to_gbp(Decimal::from(100)); // exact, unrounded
 //! # Ok::<(), hmrc_rates::LookupError>(())
 //! ```
@@ -56,7 +56,7 @@ mod http;
 pub use error::LookupError;
 pub use rate::Rate;
 pub use rates::{Rates, Table};
-pub use types::{Currency, Month, ParseMonthError, Period, RateType, YearEnd};
+pub use types::{Currency, ParseYearMonthError, Period, RateType, YearEnd, YearMonth};
 
 #[cfg(feature = "http")]
 pub use http::{FetchError, Updater};

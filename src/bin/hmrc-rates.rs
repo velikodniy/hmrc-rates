@@ -1,7 +1,7 @@
 //! Small CLI over the library: convert amounts, look up rates, list coverage.
 use chrono::NaiveDate;
 use clap::{Parser, Subcommand, ValueEnum};
-use hmrc_rates::{Month, RateType, Rates, Updater, YearEnd};
+use hmrc_rates::{RateType, Rates, Updater, YearEnd, YearMonth};
 use rust_decimal::Decimal;
 
 #[derive(Parser)]
@@ -27,7 +27,7 @@ enum Command {
     /// Show a rate for a period (YYYY-MM; spot/average need MM = 03 or 12).
     Rate {
         code: String,
-        period: Month,
+        period: YearMonth,
         #[arg(long, value_enum, default_value_t = Series::Monthly)]
         r#type: Series,
     },
@@ -62,7 +62,7 @@ impl From<Series> for RateType {
     }
 }
 
-fn year_end(month: Month) -> Result<YearEnd, String> {
+fn year_end(month: YearMonth) -> Result<YearEnd, String> {
     YearEnd::from_month(month)
         .ok_or_else(|| format!("'{month}' is not a spot/average period (use MM = 03 or 12)"))
 }

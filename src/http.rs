@@ -7,7 +7,7 @@ use chrono::Datelike;
 use crate::parse::{self, ParsedRate};
 use crate::rates::Rates;
 use crate::store::Entry;
-use crate::types::{Month, RateType, YearEnd};
+use crate::types::{RateType, YearEnd, YearMonth};
 
 const DEFAULT_BASE_URL: &str =
     "https://www.trade-tariff.service.gov.uk/api/v2/exchange_rates/files";
@@ -114,11 +114,11 @@ impl Updater {
         self.apply_cache(&mut rates);
 
         let today = chrono::Utc::now().date_naive();
-        let current = Month::from(today);
+        let current = YearMonth::from(today);
 
         // Monthly: from the first month we lack through next month (HMRC pre-publishes).
         // Current and next month may still be amended.
-        let first_missing = first_gap(rates.months(), Month::next).unwrap_or(current);
+        let first_missing = first_gap(rates.months(), YearMonth::next).unwrap_or(current);
         let mut candidate = first_missing.min(current);
         while candidate <= current.next() {
             let amendable = candidate >= current;
@@ -153,7 +153,7 @@ impl Updater {
                 .map_or(first_missing, |n| first_missing.min(*n));
             loop {
                 let end = period.end_month();
-                if Month::from(today) < end {
+                if YearMonth::from(today) < end {
                     break; // not due yet
                 }
                 let name = format!("{prefix}_csv_{}-{:02}.csv", period.year(), end.month());
@@ -244,7 +244,7 @@ impl Updater {
             .strip_prefix("monthly_xml_")
             .and_then(|r| r.strip_suffix(".xml"))
         {
-            let month: Month = rest.parse().ok()?;
+            let month: YearMonth = rest.parse().ok()?;
             let entries = validated_monthly(bytes, month).ok()?;
             rates.set_period(RateType::Monthly, month.key(), entries);
             return Some(());
@@ -315,9 +315,9 @@ fn dedup(raw: Vec<ParsedRate>) -> Result<Vec<Entry>, parse::ParseError> {
 }
 
 /// Parse, period-check and dedup one monthly XML payload.
-fn validated_monthly(bytes: &[u8], expected: Month) -> Result<Vec<Entry>, parse::ParseError> {
+fn validated_monthly(bytes: &[u8], expected: YearMonth) -> Result<Vec<Entry>, parse::ParseError> {
     let ((y, m), raw) = parse::parse_monthly_xml(bytes)?;
-    if Month::new(y, m) != Some(expected) {
+    if YearMonth::new(y, m) != Some(expected) {
         return Err(parse::ParseError("period mismatch".into()));
     }
     dedup(raw)
@@ -359,21 +359,28 @@ mod tests {
 
     #[test]
     fn first_gap_resumes_at_the_first_missing_period() {
-        let months = |keys: &[i32]| keys.iter().map(|k| Month::from_key(*k)).collect::<Vec<_>>();
+        let months = |keys: &[i32]| {
+            keys.iter()
+                .map(|k| YearMonth::from_key(*k))
+                .collect::<Vec<_>>()
+        };
         // Contiguous run: the gap is right after the end
         let run = months(&[10, 11, 12]);
         assert_eq!(
-            first_gap(run.into_iter(), Month::next),
-            Some(Month::from_key(13))
+            first_gap(run.into_iter(), YearMonth::next),
+            Some(YearMonth::from_key(13))
         );
         // A hole in the middle must win over the newest period
         let holed = months(&[10, 11, 14]);
         assert_eq!(
-            first_gap(holed.into_iter(), Month::next),
-            Some(Month::from_key(12))
+            first_gap(holed.into_iter(), YearMonth::next),
+            Some(YearMonth::from_key(12))
         );
         // Empty series has no gap to resume from
-        assert_eq!(first_gap(core::iter::empty::<Month>(), Month::next), None);
+        assert_eq!(
+            first_gap(core::iter::empty::<YearMonth>(), YearMonth::next),
+            None
+        );
     }
 
     #[test]

@@ -20,12 +20,12 @@ The sdist builds anywhere with a Rust toolchain.
 import datetime
 from decimal import Decimal
 
-from hmrc_rates import Month, Rates, YearEnd
+from hmrc_rates import YearMonth, Rates, YearEnd
 
 rates = Rates()
 
-# Monthly customs/VAT rate; months can be Month, datetime.date, or "YYYY-MM"
-rate = rates.monthly_rate("USD", Month(2025, 8))
+# Monthly customs/VAT rate; months can be YearMonth, datetime.date, or "YYYY-MM"
+rate = rates.monthly_rate("USD", YearMonth(2025, 8))
 gbp = rate.to_gbp(Decimal("2500"))  # exact — you choose the rounding
 print(f"$2500 in Aug 2025 = £{gbp.quantize(Decimal('0.01'))}")
 

@@ -367,7 +367,7 @@ fn decode_utf8_lossy_bom(bytes: &[u8]) -> std::borrow::Cow<'_, str> {
 }
 
 /// Parses a `"YYYY-MM"` data-file stem into (year, month).
-#[allow(dead_code)] // consumed by build.rs; the library parses names via Month::from_str
+#[allow(dead_code)] // consumed by build.rs; the library parses names via YearMonth::from_str
 pub fn parse_year_month(s: &str) -> Option<(i32, u32)> {
     let (y, m) = s.rsplit_once('-')?;
     let year: i32 = y.parse().ok()?;

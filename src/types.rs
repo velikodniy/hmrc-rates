@@ -5,22 +5,22 @@ use chrono::{Datelike, NaiveDate};
 /// A calendar month, the key of HMRC monthly rate tables.
 ///
 /// ```
-/// use hmrc_rates::Month;
-/// let m = Month::new(2025, 8).unwrap();
+/// use hmrc_rates::YearMonth;
+/// let m = YearMonth::new(2025, 8).unwrap();
 /// assert_eq!(m.to_string(), "2025-08");
 /// assert_eq!(m.next().month(), 9);
 /// ```
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-pub struct Month(i32); // year * 12 + (month - 1)
+pub struct YearMonth(i32); // year * 12 + (month - 1)
 
-impl Month {
+impl YearMonth {
     /// Returns `None` unless `month` is in `1..=12`.
-    pub fn new(year: i32, month: u32) -> Option<Month> {
+    pub fn new(year: i32, month: u32) -> Option<YearMonth> {
         if !(1..=12).contains(&month) {
             return None;
         }
         let key = year.checked_mul(12)?.checked_add(month as i32 - 1)?;
-        Some(Month(key))
+        Some(YearMonth(key))
     }
 
     /// The calendar year.
@@ -34,60 +34,60 @@ impl Month {
     }
 
     /// The following month (saturating at the representable maximum).
-    pub fn next(self) -> Month {
-        Month(self.0.saturating_add(1))
+    pub fn next(self) -> YearMonth {
+        YearMonth(self.0.saturating_add(1))
     }
 
     /// The preceding month (saturating at the representable minimum).
-    pub fn prev(self) -> Month {
-        Month(self.0.saturating_sub(1))
+    pub fn prev(self) -> YearMonth {
+        YearMonth(self.0.saturating_sub(1))
     }
 
     pub(crate) fn key(self) -> i32 {
         self.0
     }
 
-    pub(crate) fn from_key(key: i32) -> Month {
-        Month(key)
+    pub(crate) fn from_key(key: i32) -> YearMonth {
+        YearMonth(key)
     }
 }
 
-impl From<NaiveDate> for Month {
-    fn from(date: NaiveDate) -> Month {
-        Month(date.year() * 12 + date.month() as i32 - 1)
+impl From<NaiveDate> for YearMonth {
+    fn from(date: NaiveDate) -> YearMonth {
+        YearMonth(date.year() * 12 + date.month() as i32 - 1)
     }
 }
 
-impl fmt::Display for Month {
+impl fmt::Display for YearMonth {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:04}-{:02}", self.year(), self.month())
     }
 }
 
-/// The error returned when parsing a [`Month`] from a string fails.
+/// The error returned when parsing a [`YearMonth`] from a string fails.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
-pub struct ParseMonthError;
+pub struct ParseYearMonthError;
 
-impl fmt::Display for ParseMonthError {
+impl fmt::Display for ParseYearMonthError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("invalid month, expected YYYY-MM")
     }
 }
 
-impl core::error::Error for ParseMonthError {}
+impl core::error::Error for ParseYearMonthError {}
 
 /// Parses `"YYYY-MM"` (the [`Display`](fmt::Display) form).
-impl core::str::FromStr for Month {
-    type Err = ParseMonthError;
+impl core::str::FromStr for YearMonth {
+    type Err = ParseYearMonthError;
 
-    fn from_str(s: &str) -> Result<Month, ParseMonthError> {
+    fn from_str(s: &str) -> Result<YearMonth, ParseYearMonthError> {
         // rsplit: a leading minus sign belongs to a negative year
-        let (y, m) = s.rsplit_once('-').ok_or(ParseMonthError)?;
-        let parsed = Month::new(
-            y.parse().map_err(|_| ParseMonthError)?,
-            m.parse().map_err(|_| ParseMonthError)?,
+        let (y, m) = s.rsplit_once('-').ok_or(ParseYearMonthError)?;
+        let parsed = YearMonth::new(
+            y.parse().map_err(|_| ParseYearMonthError)?,
+            m.parse().map_err(|_| ParseYearMonthError)?,
         );
-        parsed.ok_or(ParseMonthError)
+        parsed.ok_or(ParseYearMonthError)
     }
 }
 
@@ -124,7 +124,7 @@ impl YearEnd {
     }
 
     /// The period ending in `month` — `None` unless it is a March or December.
-    pub fn from_month(month: Month) -> Option<YearEnd> {
+    pub fn from_month(month: YearMonth) -> Option<YearEnd> {
         match month.month() {
             3 => Some(YearEnd::march(month.year())),
             12 => Some(YearEnd::december(month.year())),
@@ -143,10 +143,10 @@ impl YearEnd {
     }
 
     /// The month the period ends in (March or December of [`YearEnd::year`]).
-    pub fn end_month(self) -> Month {
+    pub fn end_month(self) -> YearMonth {
         let month = if self.december { 12 } else { 3 };
         // Saturating: absurd years stay panic-free and match no stored period
-        Month(self.year.saturating_mul(12).saturating_add(month - 1))
+        YearMonth(self.year.saturating_mul(12).saturating_add(month - 1))
     }
 
     pub(crate) fn key(self) -> i32 {
@@ -251,7 +251,7 @@ impl fmt::Display for RateType {
 #[non_exhaustive]
 pub enum Period {
     /// A calendar month (monthly series).
-    Month(Month),
+    Month(YearMonth),
     /// A year ending 31 March or 31 December (spot and average series).
     YearEnd(YearEnd),
     /// An inclusive weekly-amendment validity range.
@@ -268,23 +268,23 @@ impl fmt::Display for Period {
     }
 }
 
-// Compact string forms: Month "2026-07", YearEnd "2026-03"/"2025-12", Currency "USD"
+// Compact string forms: YearMonth "2026-07", YearEnd "2026-03"/"2025-12", Currency "USD"
 #[cfg(feature = "serde")]
 mod serde_impls {
-    use super::{Currency, Month, YearEnd};
+    use super::{Currency, YearEnd, YearMonth};
     use alloc::format;
     use alloc::string::String;
     use serde::de::Error as _;
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-    impl Serialize for Month {
+    impl Serialize for YearMonth {
         fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
             serializer.collect_str(self)
         }
     }
 
-    impl<'de> Deserialize<'de> for Month {
-        fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Month, D::Error> {
+    impl<'de> Deserialize<'de> for YearMonth {
+        fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<YearMonth, D::Error> {
             let s = String::deserialize(deserializer)?;
             s.parse()
                 .map_err(|_| D::Error::custom(format!("invalid month '{s}', expected YYYY-MM")))
@@ -300,7 +300,7 @@ mod serde_impls {
 
     impl<'de> Deserialize<'de> for YearEnd {
         fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<YearEnd, D::Error> {
-            let month = Month::deserialize(deserializer)?;
+            let month = YearMonth::deserialize(deserializer)?;
             YearEnd::from_month(month).ok_or_else(|| {
                 D::Error::custom(format!(
                     "invalid year end '{month}', expected March or December"
@@ -332,23 +332,23 @@ mod tests {
 
     #[test]
     fn month_roundtrip_and_arithmetic() {
-        let m = Month::new(2025, 1).unwrap();
+        let m = YearMonth::new(2025, 1).unwrap();
         assert_eq!((m.year(), m.month()), (2025, 1));
-        assert_eq!(m.prev(), Month::new(2024, 12).unwrap());
-        assert_eq!(m.next(), Month::new(2025, 2).unwrap());
+        assert_eq!(m.prev(), YearMonth::new(2024, 12).unwrap());
+        assert_eq!(m.next(), YearMonth::new(2025, 2).unwrap());
         assert_eq!(
-            Month::new(2025, 12).unwrap().next(),
-            Month::new(2026, 1).unwrap()
+            YearMonth::new(2025, 12).unwrap().next(),
+            YearMonth::new(2026, 1).unwrap()
         );
-        assert!(Month::new(2025, 0).is_none());
-        assert!(Month::new(2025, 13).is_none());
+        assert!(YearMonth::new(2025, 0).is_none());
+        assert!(YearMonth::new(2025, 13).is_none());
         assert_eq!(m.to_string(), "2025-01");
     }
 
     #[test]
     fn month_from_date() {
         let date = NaiveDate::from_ymd_opt(2025, 8, 31).unwrap();
-        assert_eq!(Month::from(date), Month::new(2025, 8).unwrap());
+        assert_eq!(YearMonth::from(date), YearMonth::new(2025, 8).unwrap());
     }
 
     #[test]
@@ -357,7 +357,7 @@ mod tests {
         assert!(YearEnd::december(2024) < YearEnd::march(2025));
         assert_eq!(
             YearEnd::march(2026).end_month(),
-            Month::new(2026, 3).unwrap()
+            YearMonth::new(2026, 3).unwrap()
         );
         assert_eq!(
             YearEnd::december(2025).to_string(),

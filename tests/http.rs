@@ -3,16 +3,16 @@
 #![allow(clippy::unwrap_used)]
 
 use chrono::Utc;
-use hmrc_rates::{Month, Rates, Updater};
+use hmrc_rates::{Rates, Updater, YearMonth};
 use httpmock::prelude::*;
 use rust_decimal_macros::dec;
 
 /// The month after the current one — always probed, never yet bundled.
-fn next_month() -> Month {
-    Month::from(Utc::now().date_naive()).next()
+fn next_month() -> YearMonth {
+    YearMonth::from(Utc::now().date_naive()).next()
 }
 
-fn monthly_xml(month: Month, usd_rate: &str) -> String {
+fn monthly_xml(month: YearMonth, usd_rate: &str) -> String {
     let first = chrono::NaiveDate::from_ymd_opt(month.year(), month.month(), 1).unwrap();
     let last = first + chrono::Months::new(1) - chrono::Days::new(1);
     format!(
@@ -196,7 +196,7 @@ fn cached_works_fully_offline() {
     // Bundled data still present underneath
     assert!(
         rates
-            .monthly_rate("USD", Month::new(2025, 8).unwrap())
+            .monthly_rate("USD", YearMonth::new(2025, 8).unwrap())
             .is_ok()
     );
 }
@@ -209,6 +209,6 @@ fn live_endpoint_smoke() {
     let cache = tempfile::tempdir().unwrap();
     let updater = Updater::new().with_cache_dir(cache.path());
     let rates = updater.refreshed().unwrap();
-    let current = Month::from(Utc::now().date_naive());
+    let current = YearMonth::from(Utc::now().date_naive());
     assert!(rates.monthly_rate("USD", current).is_ok());
 }

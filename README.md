@@ -19,14 +19,14 @@ rust_decimal = "1"
 ## Quick start
 
 ```rust
-use hmrc_rates::{Month, Rates, YearEnd};
+use hmrc_rates::{YearMonth, Rates, YearEnd};
 use rust_decimal::Decimal;
 
 fn main() -> Result<(), hmrc_rates::LookupError> {
     let rates = Rates::new();
 
     // Monthly customs/VAT rate; also accepts a chrono::NaiveDate
-    let rate = rates.monthly_rate("USD", Month::new(2025, 8).unwrap())?;
+    let rate = rates.monthly_rate("USD", YearMonth::new(2025, 8).unwrap())?;
     let gbp = rate.to_gbp(Decimal::from(2500)); // exact — you choose the rounding
     println!("$2500 in Aug 2025 = £{}", gbp.round_dp(2));
 
@@ -99,10 +99,10 @@ pip install hmrc-rates
 
 ```python
 from decimal import Decimal
-from hmrc_rates import Month, Rates, YearEnd
+from hmrc_rates import YearMonth, Rates, YearEnd
 
 rates = Rates()
-rate = rates.monthly_rate("USD", Month(2025, 8))  # also accepts datetime.date or "2025-08"
+rate = rates.monthly_rate("USD", YearMonth(2025, 8))  # also accepts datetime.date or "2025-08"
 gbp = rate.to_gbp(Decimal("2500"))                # exact decimal.Decimal, you choose the rounding
 eur = rates.average(YearEnd.march(2025)).rate("EUR")
 ```

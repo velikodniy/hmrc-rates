@@ -63,7 +63,7 @@ fn fetch_err(e: hmrc_rates::FetchError) -> PyErr {
 
 /// A calendar month, the key of HMRC monthly rate tables.
 #[pyclass(
-    name = "Month",
+    name = "YearMonth",
     module = "hmrc_rates",
     frozen,
     eq,
@@ -73,20 +73,20 @@ fn fetch_err(e: hmrc_rates::FetchError) -> PyErr {
     from_py_object
 )]
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-struct PyMonth(hmrc_rates::Month);
+struct PyYearMonth(hmrc_rates::YearMonth);
 
-impl std::fmt::Display for PyMonth {
+impl std::fmt::Display for PyYearMonth {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.0.fmt(f)
     }
 }
 
 #[pymethods]
-impl PyMonth {
+impl PyYearMonth {
     #[new]
     fn new(year: i32, month: u32) -> PyResult<Self> {
-        hmrc_rates::Month::new(year, month)
-            .map(PyMonth)
+        hmrc_rates::YearMonth::new(year, month)
+            .map(PyYearMonth)
             .ok_or_else(|| {
                 PyValueError::new_err(format!("invalid month: year={year}, month={month}"))
             })
@@ -96,14 +96,14 @@ impl PyMonth {
     #[staticmethod]
     fn parse(s: &str) -> PyResult<Self> {
         s.parse()
-            .map(PyMonth)
-            .map_err(|e: hmrc_rates::ParseMonthError| PyValueError::new_err(e.to_string()))
+            .map(PyYearMonth)
+            .map_err(|e: hmrc_rates::ParseYearMonthError| PyValueError::new_err(e.to_string()))
     }
 
     /// The month a `datetime.date` falls in.
     #[staticmethod]
     fn from_date(date: NaiveDate) -> Self {
-        PyMonth(date.into())
+        PyYearMonth(date.into())
     }
 
     #[getter]
@@ -118,16 +118,16 @@ impl PyMonth {
 
     /// The following month (saturating).
     fn next(&self) -> Self {
-        PyMonth(self.0.next())
+        PyYearMonth(self.0.next())
     }
 
     /// The preceding month (saturating).
     fn prev(&self) -> Self {
-        PyMonth(self.0.prev())
+        PyYearMonth(self.0.prev())
     }
 
     fn __repr__(&self) -> String {
-        format!("Month({}, {})", self.0.year(), self.0.month())
+        format!("YearMonth({}, {})", self.0.year(), self.0.month())
     }
 }
 
@@ -167,7 +167,7 @@ impl PyYearEnd {
 
     /// The period ending in `month` — `None` unless it is a March or December.
     #[staticmethod]
-    fn from_month(month: PyMonth) -> Option<Self> {
+    fn from_month(month: PyYearMonth) -> Option<Self> {
         hmrc_rates::YearEnd::from_month(month.0).map(PyYearEnd)
     }
 
@@ -182,8 +182,8 @@ impl PyYearEnd {
     }
 
     /// The month the period ends in.
-    fn end_month(&self) -> PyMonth {
-        PyMonth(self.0.end_month())
+    fn end_month(&self) -> PyYearMonth {
+        PyYearMonth(self.0.end_month())
     }
 
     fn __repr__(&self) -> String {
@@ -313,9 +313,9 @@ impl PyPeriod {
     }
 
     #[getter]
-    fn month(&self) -> Option<PyMonth> {
+    fn month(&self) -> Option<PyYearMonth> {
         match self.0 {
-            hmrc_rates::Period::Month(m) => Some(PyMonth(m)),
+            hmrc_rates::Period::Month(m) => Some(PyYearMonth(m)),
             _ => None,
         }
     }
@@ -349,20 +349,20 @@ impl PyPeriod {
     }
 }
 
-/// A month given as `Month`, `datetime.date`, or a `"YYYY-MM"` string.
+/// A month given as `YearMonth`, `datetime.date`, or a `"YYYY-MM"` string.
 #[derive(FromPyObject)]
-enum MonthArg {
-    Month(PyMonth),
+enum YearMonthArg {
+    Month(PyYearMonth),
     Date(NaiveDate),
     Str(String),
 }
 
-impl MonthArg {
-    fn into_month(self) -> PyResult<hmrc_rates::Month> {
+impl YearMonthArg {
+    fn into_month(self) -> PyResult<hmrc_rates::YearMonth> {
         match self {
-            MonthArg::Month(m) => Ok(m.0),
-            MonthArg::Date(d) => Ok(d.into()),
-            MonthArg::Str(s) => s.parse().map_err(|_| {
+            YearMonthArg::Month(m) => Ok(m.0),
+            YearMonthArg::Date(d) => Ok(d.into()),
+            YearMonthArg::Str(s) => s.parse().map_err(|_| {
                 PyValueError::new_err(format!("invalid month '{s}', expected YYYY-MM"))
             }),
         }
@@ -450,7 +450,7 @@ impl PyRate {
 
 #[derive(Copy, Clone)]
 enum TableKey {
-    Month(hmrc_rates::Month),
+    Month(hmrc_rates::YearMonth),
     Spot(hmrc_rates::YearEnd),
     Average(hmrc_rates::YearEnd),
     Week(NaiveDate),
@@ -573,8 +573,8 @@ impl PyRates {
         }
     }
 
-    /// The monthly rate for `code` in `month` (a `Month`, `datetime.date`, or `"YYYY-MM"`).
-    fn monthly_rate(&self, code: &str, month: MonthArg) -> PyResult<PyRate> {
+    /// The monthly rate for `code` in `month` (a `YearMonth`, `datetime.date`, or `"YYYY-MM"`).
+    fn monthly_rate(&self, code: &str, month: YearMonthArg) -> PyResult<PyRate> {
         self.inner
             .monthly_rate(code, month.into_month()?)
             .map(PyRate)
@@ -585,7 +585,7 @@ impl PyRates {
     fn monthly_rate_or_earlier(
         &self,
         code: &str,
-        month: MonthArg,
+        month: YearMonthArg,
         max_months_back: u32,
     ) -> PyResult<PyRate> {
         self.inner
@@ -595,7 +595,7 @@ impl PyRates {
     }
 
     /// The full monthly table for a month.
-    fn monthly(&self, month: MonthArg) -> PyResult<PyTable> {
+    fn monthly(&self, month: YearMonthArg) -> PyResult<PyTable> {
         PyTable::build(&self.inner, TableKey::Month(month.into_month()?))
     }
 
@@ -615,8 +615,8 @@ impl PyRates {
     }
 
     /// All months with monthly tables, ascending.
-    fn months(&self) -> Vec<PyMonth> {
-        self.inner.months().map(PyMonth).collect()
+    fn months(&self) -> Vec<PyYearMonth> {
+        self.inner.months().map(PyYearMonth).collect()
     }
 
     /// All year ends with spot tables, ascending.
@@ -689,7 +689,7 @@ fn hmrc_rates_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyRates>()?;
     m.add_class::<PyTable>()?;
     m.add_class::<PyRate>()?;
-    m.add_class::<PyMonth>()?;
+    m.add_class::<PyYearMonth>()?;
     m.add_class::<PyYearEnd>()?;
     m.add_class::<PyCurrency>()?;
     m.add_class::<PyRateType>()?;

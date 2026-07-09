@@ -1,7 +1,7 @@
 import pytest
 from hmrc_rates import (
     HmrcRatesError,
-    Month,
+    YearMonth,
     NotInPeriodError,
     PeriodNotAvailableError,
     Rates,
@@ -14,7 +14,7 @@ rates = Rates()
 
 def test_unknown_currency():
     with pytest.raises(UnknownCurrencyError) as excinfo:
-        rates.monthly_rate("ZZZ", Month(2025, 8))
+        rates.monthly_rate("ZZZ", YearMonth(2025, 8))
     assert isinstance(excinfo.value, HmrcRatesError)
     # must not shadow or subclass the Python builtin
     assert not isinstance(excinfo.value, LookupError)
@@ -23,7 +23,7 @@ def test_unknown_currency():
 
 def test_period_not_available():
     with pytest.raises(PeriodNotAvailableError) as excinfo:
-        rates.monthly(Month(2100, 1))
+        rates.monthly(YearMonth(2100, 1))
     # the message carries the available range
     assert "available" in str(excinfo.value)
 
@@ -46,7 +46,7 @@ def test_not_in_period():
 
 
 def test_table_rate_unknown_currency():
-    table = rates.monthly(Month(2025, 8))
+    table = rates.monthly(YearMonth(2025, 8))
     with pytest.raises(UnknownCurrencyError):
         table.rate("ZZZ")
 

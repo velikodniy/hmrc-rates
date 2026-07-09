@@ -35,11 +35,11 @@ impl Rate {
     /// # Examples
     ///
     /// ```
-    /// use hmrc_rates::{Month, Rates};
+    /// use hmrc_rates::{YearMonth, Rates};
     /// use rust_decimal::Decimal;
     ///
     /// let rates = Rates::new();
-    /// let usd = rates.monthly_rate("USD", Month::new(2025, 8).unwrap())?;
+    /// let usd = rates.monthly_rate("USD", YearMonth::new(2025, 8).unwrap())?;
     /// let gbp = usd.to_gbp(Decimal::from(2500));
     /// println!("£{}", gbp.round_dp(2));
     /// # Ok::<(), hmrc_rates::LookupError>(())

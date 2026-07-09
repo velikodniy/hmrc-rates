@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 import pytest
-from hmrc_rates import Month, Rates, Updater
+from hmrc_rates import YearMonth, Rates, Updater
 
 
 def test_cached_works_offline(tmp_path):
@@ -9,7 +9,7 @@ def test_cached_works_offline(tmp_path):
     updater = Updater(cache_dir=str(tmp_path))
     rates = updater.cached()
     assert isinstance(rates, Rates)
-    assert rates.monthly_rate("USD", Month(2025, 8)).units_per_gbp > Decimal(0)
+    assert rates.monthly_rate("USD", YearMonth(2025, 8)).units_per_gbp > Decimal(0)
 
 
 @pytest.mark.network

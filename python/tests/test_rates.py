@@ -2,27 +2,27 @@ import datetime
 from decimal import Decimal
 
 import pytest
-from hmrc_rates import Currency, Month, Rate, Rates, RateType, YearEnd
+from hmrc_rates import Currency, YearMonth, Rate, Rates, RateType, YearEnd
 
 rates = Rates()
 
 
 def test_monthly_rate_smoke():
-    rate = rates.monthly_rate("USD", Month(2025, 8))
+    rate = rates.monthly_rate("USD", YearMonth(2025, 8))
     assert isinstance(rate, Rate)
     assert rate.currency.code == "USD"
     assert rate.units_per_gbp > 0
 
 
 def test_money_is_decimal_never_float():
-    rate = rates.monthly_rate("USD", Month(2025, 8))
+    rate = rates.monthly_rate("USD", YearMonth(2025, 8))
     assert type(rate.units_per_gbp) is Decimal
     assert type(rate.to_gbp(Decimal("2500"))) is Decimal
     assert type(rate.from_gbp(100)) is Decimal
 
 
 def test_exact_arithmetic():
-    rate = rates.monthly_rate("USD", Month(2025, 8))
+    rate = rates.monthly_rate("USD", YearMonth(2025, 8))
     # x / x is exactly 1 in any decimal arithmetic
     assert rate.to_gbp(rate.units_per_gbp) == Decimal(1)
     # multiplication terminates well within both precisions
@@ -32,21 +32,21 @@ def test_exact_arithmetic():
 
 
 def test_month_like_arguments_agree():
-    by_month = rates.monthly_rate("USD", Month(2025, 8))
+    by_month = rates.monthly_rate("USD", YearMonth(2025, 8))
     by_date = rates.monthly_rate("USD", datetime.date(2025, 8, 15))
     by_str = rates.monthly_rate("USD", "2025-08")
     assert by_month == by_date == by_str
 
 
 def test_gbp_identity():
-    rate = rates.monthly_rate("GBP", Month(2025, 8))
+    rate = rates.monthly_rate("GBP", YearMonth(2025, 8))
     assert rate.units_per_gbp == Decimal(1)
     assert rate.currency == Currency.GBP
 
 
 def test_lookup_is_case_insensitive():
-    assert rates.monthly_rate("usd", Month(2025, 8)) == rates.monthly_rate(
-        "USD", Month(2025, 8)
+    assert rates.monthly_rate("usd", YearMonth(2025, 8)) == rates.monthly_rate(
+        "USD", YearMonth(2025, 8)
     )
 
 
@@ -57,11 +57,11 @@ def test_monthly_rate_or_earlier_reveals_substitution():
 
 
 def test_monthly_table():
-    table = rates.monthly(Month(2025, 8))
+    table = rates.monthly(YearMonth(2025, 8))
     assert len(table) > 100
     assert table.rate_type == RateType.MONTHLY
     assert table.period.kind == "month"
-    assert table.period.month == Month(2025, 8)
+    assert table.period.month == YearMonth(2025, 8)
     entries = dict(table)
     assert len(entries) == len(table)
     currency, rate = next(iter(table))
@@ -87,7 +87,7 @@ def test_spot_average_weekly_tables():
 def test_period_listings():
     months = rates.months()
     assert months == sorted(months)
-    assert Month(2025, 8) in months
+    assert YearMonth(2025, 8) in months
     assert rates.spot_periods() == sorted(rates.spot_periods())
     assert YearEnd.march(2025) in rates.average_periods()
     assert rates.weeks()
@@ -96,7 +96,7 @@ def test_period_listings():
 
 
 def test_float_amounts_rejected():
-    rate = rates.monthly_rate("USD", Month(2025, 8))
+    rate = rates.monthly_rate("USD", YearMonth(2025, 8))
     with pytest.raises(TypeError, match="float"):
         rate.to_gbp(2500.0)
     with pytest.raises(TypeError, match="float"):
