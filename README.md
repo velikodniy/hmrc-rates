@@ -2,6 +2,7 @@
 
 [![crates.io](https://img.shields.io/crates/v/hmrc-rates.svg)](https://crates.io/crates/hmrc-rates)
 [![docs.rs](https://img.shields.io/docsrs/hmrc-rates)](https://docs.rs/hmrc-rates)
+[![PyPI](https://img.shields.io/pypi/v/hmrc-rates.svg)](https://pypi.org/project/hmrc-rates/)
 
 Official HMRC exchange rates as a Rust library.
 The full published history is compiled into your binary (~450 KB of read-only data), so `Rates::new()` is free and infallible — no parsing, no I/O, no startup cost.
@@ -89,6 +90,27 @@ let rates = updater.refreshed().unwrap_or_else(|e| {
     updater.cached()
 });
 ```
+
+## Python
+
+The same library is on PyPI as [`hmrc-rates`](https://pypi.org/project/hmrc-rates/) (Python ≥ 3.10):
+
+```sh
+pip install hmrc-rates
+```
+
+```python
+from decimal import Decimal
+from hmrc_rates import Month, Rates, YearEnd
+
+rates = Rates()
+rate = rates.monthly_rate("USD", Month(2025, 8))  # also accepts datetime.date or "2025-08"
+gbp = rate.to_gbp(Decimal("2500"))                # exact decimal.Decimal — you choose the rounding
+eur = rates.average(YearEnd.march(2025)).rate("EUR")
+```
+
+Wheels ship for Linux (glibc and musl, x86_64 and aarch64), macOS and Windows; the sdist builds anywhere with a Rust toolchain.
+See [python/README.md](python/README.md) for the full Python API.
 
 ## Documentation
 
