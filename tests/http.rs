@@ -157,10 +157,20 @@ fn corrupt_cache_files_are_ignored_and_refetched() {
     let next = next_month();
     let name = format!("monthly_xml_{next}.xml");
     std::fs::write(cache.path().join(&name), "not xml at all").unwrap();
-    // Corrupt + amendable: cached() ignores it entirely
+    let bundled_rate = Rates::new()
+        .monthly_rate("USD", next)
+        .ok()
+        .map(|rate| rate.units_per_gbp());
+    // Corrupt + amendable: cached() ignores it and preserves bundled data
     let updater_offline = Updater::new().with_cache_dir(cache.path());
     let rates = updater_offline.cached();
-    assert!(rates.monthly_rate("USD", next).is_err());
+    assert_eq!(
+        rates
+            .monthly_rate("USD", next)
+            .ok()
+            .map(|rate| rate.units_per_gbp()),
+        bundled_rate
+    );
 
     // refreshed() replaces it: even a fresh-mtime corrupt file for an
     // amendable month gets refetched because parsing failed at apply time
