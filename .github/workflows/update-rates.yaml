@@ -11,12 +11,12 @@ jobs:
   update:
     runs-on: ubuntu-latest
     permissions:
+      actions: write
       contents: write
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          token: ${{ secrets.RELEASE_TOKEN || github.token }}
       - name: Download new rates
         id: download
         run: python3 scripts/update_rates.py --verbose >> "$GITHUB_OUTPUT"
@@ -26,12 +26,14 @@ jobs:
           cargo test -p hmrc-rates --all-features
           cargo test -p hmrc-rates --features http -- --ignored live_endpoint_smoke
       - name: Bump version, commit and tag
+        id: release
         if: steps.download.outputs.has-new == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           old=$(grep -m1 '^version = "' Cargo.toml | cut -d'"' -f2)
           new=$(echo "$old" | awk -F. '{printf "%d.%d.%d", $1, $2, $3 + 1}')
+          echo "tag=v$new" >> "$GITHUB_OUTPUT"
           sed -i "0,/^version = \"$old\"/s//version = \"$new\"/" Cargo.toml
           cargo update --workspace
           git add data Cargo.toml Cargo.lock
@@ -40,3 +42,11 @@ jobs:
           git tag -a "v$new" -m "v$new" -m "${{ steps.download.outputs.release-body }}"
           git push origin main
           git push origin "v$new"
+      - name: Trigger release workflows
+        if: steps.download.outputs.has-new == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_REF: ${{ steps.release.outputs.tag }}
+        run: |
+          gh workflow run publish.yaml --repo "$GITHUB_REPOSITORY" --ref main -f ref="$RELEASE_REF"
+          gh workflow run python.yaml --repo "$GITHUB_REPOSITORY" --ref main -f ref="$RELEASE_REF"
